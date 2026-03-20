@@ -1,6 +1,6 @@
 {
   "name": "rblxswap-launcher",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "Swap between alts whilst evading Roblox's BanAsync API.",
   "main": "main.js",
   "scripts": {
