@@ -10,7 +10,7 @@ const execFileAsync = promisify(execFile);
 const https = require('https');
 
 const isDev = !app.isPackaged;
-const APP_VERSION = "v0.1.5"; //? also update in package.json, and in the github release body/title for update checking to work (or else it will just assume any release is new lol)	
+const APP_VERSION = "v0.1.6"; //? also update in package.json, and in the github release body/title for update checking to work (or else it will just assume any release is new lol)	
 let mainWindow;
 let bypassRunning = false;
 let appIsQuitting = false;
