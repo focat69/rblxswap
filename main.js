@@ -487,13 +487,20 @@ ipcMain.handle('check-updates', async () => {
 			res.on('data', chunk => data += chunk);
 			res.on('end', () => {
 				try {
-					const release = JSON.parse(data);
-					if (!((release.body || '').includes(APP_VERSION) || (release.name || '').includes(APP_VERSION))) {
-						//? extract version from body (vX.Y.Z)
-						const versionMatch = release.body.match(/v\d+\.\d+\.\d+/) || release.name.match(/v\d+\.\d+\.\d+/);
-						const latestVersion = versionMatch ? versionMatch[0] : release.tag_name;
+					// const release = JSON.parse(data);
+					// if (!((release.body || '').includes(APP_VERSION) || (release.name || '').includes(APP_VERSION))) {
+					// 	//? extract version from body (vX.Y.Z)
+					// 	const versionMatch = release.body.match(/v\d+\.\d+\.\d+/) || release.name.match(/v\d+\.\d+\.\d+/);
+					// 	const latestVersion = versionMatch ? versionMatch[0] : release.tag_name;
 
-						resolve({ updateAvailable: true, version: latestVersion, url: release.html_url });
+					// 	resolve({ updateAvailable: true, version: latestVersion, url: release.html_url });
+					// } else {
+					// 	resolve({ updateAvailable: false, version: APP_VERSION });
+					// }
+					//! so i'm slow and i can just use the tag name
+					const release = JSON.parse(data);
+					if (release.tag_name !== APP_VERSION) {
+						resolve({ updateAvailable: true, version: release.tag_name, url: release.html_url });
 					} else {
 						resolve({ updateAvailable: false, version: APP_VERSION });
 					}
