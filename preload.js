@@ -11,7 +11,15 @@ const withListener = (channel, callback) => {
 
 contextBridge.exposeInMainWorld('launcher', {
   version: process.versions.electron,
-  runBypass: () => ipcRenderer.invoke('bypass:run'),
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  setConfig: (c) => ipcRenderer.invoke('set-config', c),
+  getVersion: () => ipcRenderer.invoke('get-version'),
+  checkUpdates: () => ipcRenderer.invoke('check-updates'),
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  selectDir: () => ipcRenderer.invoke('select-directory'),
+  scanWeblauncher: () => ipcRenderer.invoke('scan-weblauncher'),
+  hideWindow: () => ipcRenderer.invoke('hide-window'),
+  runBypass: (weblauncherDir) => ipcRenderer.invoke('bypass:run', weblauncherDir),
   onLog: (callback) => withListener('bypass:log', callback),
   onStatus: (callback) => withListener('bypass:status', callback),
   onComplete: (callback) => withListener('bypass:complete', callback),
@@ -23,3 +31,4 @@ contextBridge.exposeInMainWorld('launcher', {
   restartAdapter: (name) => ipcRenderer.invoke('mac:restart-adapter', name),
   dhcpRefresh: () => ipcRenderer.invoke('mac:dhcp-refresh')
 });
+

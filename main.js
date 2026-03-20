@@ -1,4 +1,4 @@
-const { app, BrowserWindow, nativeTheme, ipcMain } = require('electron');
+const { app, BrowserWindow, nativeTheme, ipcMain, dialog, Tray, Menu, Notification } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -7,10 +7,50 @@ const { promisify } = require('util');
 
 const fsPromises = fs.promises;
 const execFileAsync = promisify(execFile);
+const https = require('https');
 
 const isDev = !app.isPackaged;
+const APP_VERSION = "v0.1.5"; //? also update in package.json, and in the github release body/title for update checking to work (or else it will just assume any release is new lol)	
 let mainWindow;
 let bypassRunning = false;
+let appIsQuitting = false;
+let tray = null;
+let robloxPoller = null;
+let wasRobloxRunning = false;
+
+function getConfigPath() {
+	return path.join(app.getPath('userData'), 'config.json');
+}
+
+function getConfig() {
+	try {
+		const p = getConfigPath();
+		if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'));
+	} catch (e) {}
+	return { 
+		launcherType: 'default', weblauncherDir: null,
+		theme: {
+			"bg-base": "#101010",
+			"bg-accent": "#191919",
+			"text-main": "#f0f0f0",
+			"good": "#4ade80",
+			"bad": "#f87171",
+			"bg-img": "",
+			"hide-grid": false
+		},
+		spoofMode: 'simple'
+	};
+}
+
+function setConfig(newConfig) {
+	try {
+		const current = getConfig();
+		const updated = { ...current, ...newConfig };
+		fs.writeFileSync(getConfigPath(), JSON.stringify(updated, null, 2), 'utf8');
+		return updated;
+	} catch (e) {}
+	return newConfig;
+}
 
 function createWindow() {
 	const windowOptions = {
@@ -42,6 +82,13 @@ function createWindow() {
 
 	mainWindow.on('closed', () => {
 		mainWindow = null;
+	});
+
+	mainWindow.on('close', (e) => {
+		if (!appIsQuitting) {
+			e.preventDefault();
+			mainWindow.hide();
+		}
 	});
 
 	if (process.platform === 'win32') {
@@ -263,13 +310,57 @@ async function removeProgramDataRoblox() {
 	await removeDirectory(path.join(programData, 'Roblox'), 'ProgramData Roblox');
 }
 
-async function runBypassWorkflow() {
+async function findExeShallow(dir, exeName, currentDepth = 0, maxDepth = 3) { // thanks geepeetee
+	if (currentDepth > maxDepth) return null;
+	try {
+		const entries = await fsPromises.readdir(dir, { withFileTypes: true });
+		let dirs = [];
+		for (const entry of entries) {
+			if (entry.name === exeName) return dir;
+			if (entry.isDirectory() && entry.name !== 'node_modules' && !entry.name.startsWith('.')) {
+				dirs.push(path.join(dir, entry.name));
+			}
+		}
+		for (const subDir of dirs) {
+			const found = await findExeShallow(subDir, exeName, currentDepth + 1, maxDepth);
+			if (found) return found;
+		}
+	} catch (e) {}
+	return null;
+}
+
+async function cleanWebLauncher(targetDir) {
+	if (!targetDir) return;
+
+	emitLog('info', `Cleaning weao weblauncher at ${targetDir}`);
+	
+	const baddirs = ['content', 'ExtraContent', 'PlatformContent', 'RobloxPlayerBeta.exe.WebView2', 'shaders', 'ssl', 'WebView2RuntimeInstaller'];
+	const badfiles = ['RobloxCrashHandler.exe', 'RobloxPlayerBeta.dll', 'RobloxPlayerBeta.exe', 'WebView2Loader.dll', 'COPYRIGHT.txt'];
+
+	for (const d of baddirs) {
+		await removeDirectory(path.join(targetDir, d), `WebLauncher / ${d}`);
+	}
+	
+	for (const f of badfiles) {
+		try {
+			const targetPath = path.join(targetDir, f);
+			if (await pathExists(targetPath)) {
+				await fsPromises.rm(targetPath, { force: true });
+				emitLog('success', `WebLauncher / removed file ${f}`);
+			}
+		} catch (e) {
+			emitLog('warn', `Failed to remove ${f}: ${e.message}`);
+		}
+	}
+}
+
+async function runBypassWorkflow(weblauncherDir) {
 	const localAppData = process.env.LOCALAPPDATA;
 	if (!localAppData) { // you alraedy kno
 		throw new Error('LOCALAPPDATA environment variable is not defined????????????????????????????????????????? WTF');
 	}
 
-	emitLog('info', 'Yo veo roblox... Bypassing np');
+	emitLog('info', 'YO VEO ROBLOX... Bypassing np');
 
 	//?         label,                         progress
 	emitStatus('terminating Roblox processes', 5);
@@ -281,6 +372,9 @@ async function runBypassWorkflow() {
 
 	emitStatus('detecting launchers', 15);
 	await cleanLauncherInstallations(localAppData);
+	if (weblauncherDir) {
+		await cleanWebLauncher(weblauncherDir);
+	}
 
 	emitStatus('purging Roblox install', 35);
 	await removeDirectory(path.join(localAppData, 'Roblox'), 'Roblox install folder');
@@ -310,20 +404,110 @@ async function runBypassWorkflow() {
 app.whenReady().then(() => {
 	createWindow();
 
+	tray = new Tray(path.join(__dirname, 'icon.ico'));
+	const contextMenu = Menu.buildFromTemplate([
+			{ label: 'Open rblxswap', click: () => { mainWindow.show(); mainWindow.focus(); } },
+			{ label: 'Exit', click: () => { appIsQuitting = true; app.quit(); } }
+	]);
+	tray.setToolTip('rblxswap');
+	tray.setContextMenu(contextMenu);
+	tray.on('double-click', () => {
+			mainWindow.show();
+			mainWindow.focus();
+	});
+
+	robloxPoller = setInterval(() => {
+		execFile('tasklist', ['/FI', 'IMAGENAME eq RobloxPlayerBeta.exe', '/NH'], (err, stdout) => {
+			if (err) return;
+			const isCurrentlyRunning = stdout.includes('RobloxPlayerBeta.exe');
+			if (!wasRobloxRunning && isCurrentlyRunning) {
+				wasRobloxRunning = true;
+			} else if (wasRobloxRunning && !isCurrentlyRunning) {
+				wasRobloxRunning = false;
+				const notif = new Notification({
+					title: 'Want to swap?',
+					body: 'Roblox just closed. Click here to swap/spoof.',
+					icon: path.join(__dirname, 'icon.ico')
+				});
+				notif.on('click', () => {
+					mainWindow.show();
+					mainWindow.focus();
+					mainWindow.webContents.executeJavaScript('show_view("home")');
+				});
+				notif.show();
+			}
+		});
+	}, 5000);
+
 	app.on('activate', () => {
-		if (BrowserWindow.getAllWindows().length === 0) {
-			createWindow();
-		}
+			if (BrowserWindow.getAllWindows().length === 0) {
+					createWindow();
+			}
 	});
 });
 
-app.on('window-all-closed', () => {
-	if (process.platform !== 'darwin') {
-		app.quit();
-	}
+//app.on('window-all-closed', () => {});
+
+ipcMain.handle('select-directory', async () => {
+	const result = await dialog.showOpenDialog(mainWindow, {
+		properties: ['openDirectory'],
+		title: 'Select your WEAO RDD WebLauncher directory (it has weblauncher.exe inside it)',
+		defaultPath: app.getPath('downloads')
+	});
+	return result.canceled ? null : result.filePaths[0];
 });
 
-ipcMain.handle('bypass:run', async () => {
+ipcMain.handle('hide-window', () => { if(mainWindow) mainWindow.hide(); });
+
+ipcMain.handle('scan-weblauncher', async () => {
+	const userProfile = process.env.USERPROFILE;
+	const localAppData = process.env.LOCALAPPDATA;
+	const roots = [
+		path.join(userProfile, 'Desktop'),
+		path.join(userProfile, 'Downloads'),
+		localAppData,
+		path.join(userProfile, 'Documents')
+	];
+
+	for (const root of roots) {
+		const targetDir = await findExeShallow(root, 'weblauncher.exe', 0, 3);
+		if (targetDir) return targetDir;
+	}
+	return null;
+});
+
+ipcMain.handle('get-config', () => getConfig());
+ipcMain.handle('set-config', (e, conf) => setConfig(conf));
+ipcMain.handle('get-version', () => APP_VERSION);
+
+ipcMain.handle('check-updates', async () => {
+	return new Promise((resolve) => {
+		https.get('https://api.github.com/repos/focat69/rblxswap/releases/latest', { headers: { 'User-Agent': 'rblxswap-updater' } }, (res) => {
+			let data = '';
+			res.on('data', chunk => data += chunk);
+			res.on('end', () => {
+				try {
+					const release = JSON.parse(data);
+					if (!((release.body || '').includes(APP_VERSION) || (release.name || '').includes(APP_VERSION))) {
+						//? extract version from body (vX.Y.Z)
+						const versionMatch = release.body.match(/v\d+\.\d+\.\d+/) || release.name.match(/v\d+\.\d+\.\d+/);
+						const latestVersion = versionMatch ? versionMatch[0] : release.tag_name;
+
+						resolve({ updateAvailable: true, version: latestVersion, url: release.html_url });
+					} else {
+						resolve({ updateAvailable: false, version: APP_VERSION });
+					}
+				} catch(e) { resolve({ error: true }); }
+			});
+		}).on('error', () => resolve({ error: true }));
+	});
+});
+
+ipcMain.handle('open-external', async (e, url) => {
+	require('electron').shell.openExternal(url);
+});
+
+ipcMain.handle('bypass:run', async (event, weblauncherDir) => {
 	if (bypassRunning) { // again, debounce safety precaution for silly people
 		emitLog('warn', 'WHO IS THIS???'); // already running bud
 		return { success: false, reason: 'busy' };
@@ -333,7 +517,7 @@ ipcMain.handle('bypass:run', async () => {
 	emitStatus('starting', 0);
 
 	try {
-		await runBypassWorkflow();
+		await runBypassWorkflow(weblauncherDir);
 		sendToRenderer('bypass:complete', { success: true });
 		return { success: true };
 	} catch (error) {
@@ -354,7 +538,7 @@ ipcMain.handle('mac:get-adapters', async () => {
 		const { stdout } = await execFileAsync('powershell', [
 			'-NoProfile',
 			'-Command',
-			'@(Get-NetAdapter -Physical | Select-Object Name, InterfaceDescription, MacAddress, Status) | ConvertTo-Json -Compress'
+			`@(Get-NetAdapter | Where-Object { $_.MacAddress -and $_.InterfaceDescription -notmatch 'WARP|VPN|Virtual|Tap|Teredo' } | Select-Object Name, InterfaceDescription, MacAddress, Status) | ConvertTo-Json -Compress`
 		]);
 		return JSON.parse(stdout || '[]');
 	} catch (err) {
@@ -446,3 +630,7 @@ ipcMain.handle('mac:dhcp-refresh', async () => { //? to get new localip np
 		return false;
 	}
 });
+
+
+
+

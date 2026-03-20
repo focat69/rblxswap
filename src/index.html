@@ -1,536 +1,970 @@
+<!-- got so used to tailwind that most styles are inline :sob: -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RblxSwap</title>
-    <link rel="stylesheet" href="style.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        html {
-            background: transparent !important;
+        :root {
+            --bg-base: #101010;
+            --bg-accent: #191919;
+            --bg-darker: #0c0c0c;
+            --text-main: #f0f0f0;
+            --text-dim: #888888;
+            --accent: #ffffff;
+            --border: rgba(255, 255, 255, 0.06);
+            --good: #4ade80;
+            --bad: #f87171;
+            --sys-hover: rgba(255,255,255,0.05);
+            font-family: 'Poppins', sans-serif;
         }
 
+        html { background: transparent !important; }
         body {
             user-select: none;
-            overflow: hidden;
             margin: 0;
             height: 100vh;
             width: 100vw;
-            background: transparent;
+            background: var(--bg-base);
             -webkit-app-region: drag;
+            overflow: hidden;
         }
 
+        /* to make interactive elements clickable!!!!! (dumb) */
+        button, input, select, label, .radio-opt, p, h1, span {
+            -webkit-app-region: no-drag;
+        }
+        
+        ::-webkit-scrollbar { display: none; width: 0; }
+        
         .app-wrapper {
-            background: #161616;
-            border: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+            background-color: transparent;
+            border: 1px solid var(--border);
             border-radius: 12px;
             box-sizing: border-box;
             height: 100vh;
             width: 100vw;
             overflow-x: hidden;
             overflow-y: auto;
-            padding: 18px;
-            scrollbar-width: none; /* Firefox */
-        }
-        
-        .app-wrapper::-webkit-scrollbar {
-            display: none;
-            width: 0;
-        }
-        
-        .no-drag, form, button, input, select, label, .sys-close, .slider, .tt-icon, p {
+            scrollbar-width: none;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
             -webkit-app-region: no-drag;
         }
-        
-        ::-webkit-scrollbar {
-            display: none;
-            width: 0;
+
+        #bg-img-layer {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-size: cover; background-position: center;
+            opacity: 0.15; z-index: 1; pointer-events: none;
         }
 
+        .app-wrapper::before {
+            content: '';
+            position: fixed;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
+            background-size: 22px 22px;
+            transform: rotate(15deg);
+            pointer-events: none;
+            z-index: 0;
+            display: var(--grid-display, block);
+        }
+
+        /* header (idk why i named it so weird) */
         .hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 22px;
             -webkit-app-region: drag;
-            position: relative;
-            margin-bottom: 6px;
+            height: 30px;
+            z-index: 10;
         }
+        .hdr * { -webkit-app-region: no-drag; }
         
-        .hdr * {
-            -webkit-app-region: no-drag;
-        }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-img { width: 24px; height: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); border-radius:4px; opacity:0.9;}
+        .logo-text { font-weight: 600; font-size: 1.05rem; letter-spacing: 0.2px; }
 
-        .sys-close {
-            position: absolute;
-            top: 12px;
-            right: 14px;
-            cursor: pointer;
-            color: #888;
-            transition: color 0.15s ease;
+        .ctrls { display: flex; align-items: center; gap: 8px; }
+        .sys-btn {
+            display: inline-flex; justify-content: center; align-items: center;
+            width: 28px; height: 28px; border-radius: 50%;
+            color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+            background: var(--bg-base);
         }
+        .sys-btn:hover { background: var(--sys-hover); color: var(--text-main); }
+        .sys-btn.close:hover { color: var(--bad); }
+
+        /* views = pages :P */
+        .view-stack {
+            position: relative; flex: 1; padding: 0 30px;
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
+            text-align: center;
+            z-index: 10;
+        }
+        .view { display: none; width: 100%; animation: fadeUp 0.3s ease forwards; }
+        .view.active { display: block; }
         
-        .sys-close:hover {
-            color: var(--bad);
-        }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        .fgrid label {
-            white-space: normal;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* switch (wow really sherlock?) */
+        h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 10px 0; }
+        p { font-size: 0.85rem; color: var(--text-dim); margin: 0 0 20px 0; line-height: 1.5; }
+
+        button {
+            background: var(--bg-accent); border: 1px solid var(--border);
+            color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 500;
+            padding: 10px 24px; border-radius: 20px; cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        button:hover { background: #222; border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
+        button:active { transform: translateY(1px); }
+        button.btn-primary { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+        button.btn-primary:hover { background: rgba(255,255,255,0.15); }
+        button.btn-danger { color: var(--bad); }
+
+        .footer {
+            padding: 14px 22px; display: flex; justify-content: space-between; align-items: flex-end;
+            font-size: 0.75rem; color: var(--text-dim); height: 20px;
+            z-index: 10;
+        }
+        .badge {
+            background: var(--bg-accent); padding: 4px 10px; border-radius: 12px;
+            border: 1px solid var(--border); font-weight: 500; cursor: default;
+            transition: all 0.2s ease;
+        }
+        .status-badge { opacity: 0.6; font-style: italic; }
+
+        #tooltip {
+            position: fixed; pointer-events: none; opacity: 0; z-index: 1000;
+            background: #2a2a2a; color: #eee; font-size: 0.75rem; font-weight: 500;
+            padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-family: inherit;
+            transition: opacity 0.15s ease, transform 0.1s linear; transform: translate(-50%, 10px);
+        }
+
+        #updateModal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7); z-index: 9999;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px); -webkit-app-region: no-drag;
+        }
+        #updateModal > div {
+            background: var(--bg-accent); padding: 24px; border-radius: 16px;
+            border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            text-align: center; max-width: 300px; animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        input[type="text"], select {
+            background: var(--bg-darker); border: 1px solid var(--border);
+            color: var(--text-main); font-family: inherit; font-size: 0.8rem;
+            padding: 8px 12px; border-radius: 8px; width: 100%; box-sizing: border-box; outline: none;
+        }
+        input[type="text"]:focus, select:focus { border-color: rgba(255,255,255,0.2); }
+
+        .fgrid { text-align: left; background: var(--bg-accent); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
+        .fgrid label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
+
+        /* for loading anim */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* switch toggle */
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #2a2a2a; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); transition: .2s; }
-        .slider:before { position: absolute; content: ""; height: 10px; width: 10px; left: 3px; bottom: 3px; background-color: #888; border-radius: 50%; transition: .2s; }
-        input:checked + .slider { background-color: rgba(59, 106, 234, 0.15); border-color: rgba(59, 106, 234, 0.3); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-darker); border-radius: 18px; border: 1px solid var(--border); transition: .2s; }
+        .slider:before { position: absolute; content: ""; height: 10px; width: 10px; left: 3px; bottom: 3px; background-color: var(--text-dim); border-radius: 50%; transition: .2s; }
+        input:checked + .slider { background-color: rgba(255,255,255, 0.15); border-color: rgba(255,255,255, 0.3); }
         input:checked + .slider:before { transform: translateX(16px); background-color: var(--good); }
 
-        .tt-icon { display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; border-radius: 50%; background: #2a2a2a; color: #888; font-size: 10px; cursor: help; margin-left: 6px; position: relative; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); }
-        .tt-icon[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 130%; left: 0; transform: translateX(-20%); padding: 6px 8px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #ccc; font-size: 0.72rem; white-space: normal; width: 160px; text-align: left; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.5); pointer-events: none; }
-
-        /* ud flow state */
-        .flow-step { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .flow-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .step-title { font-size: 0.85rem; color: #eee; margin-bottom: 10px; display: flex; align-items: center; font-weight: 500; }
+        .radio-opt { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px; font-size: 0.85rem; color: #ccc;}
+        .radio-opt input { accent-color: var(--text-main); }
+        
+        .theme-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .theme-row:last-child { border-bottom: none; }
+        .theme-row p { margin: 0; }
+        .theme-label { font-size: 0.85rem; font-weight: 500; color: var(--text-main); }
+        .theme-desc { font-size: 0.7rem; color: var(--text-dim); }
+        .theme-picker { display: flex; align-items: center; gap: 8px; background: var(--bg-darker); padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); }
+        .theme-picker input[type="color"] { width: 24px; height: 24px; padding: 0; border: none; border-radius: 4px; background: var(--bg-base); cursor: pointer; }
+        .theme-picker input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        .theme-picker input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; }
+        .theme-picker span { font-family: monospace; font-size: 0.75rem; color: var(--text-main); width: 60px; text-transform: uppercase;}
+        
+        /* lil easter egg :DDD */
+        @keyframes bao-fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .bao-confetti {
+            position: fixed;
+            top: -50px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: bao-fall 2s linear forwards;
+        }
     </style>
 </head>
 
 <body>
-    <div class="app-wrapper">
-    <div class="stack" style="min-height: 100%;">
-        <div class="hdr no-select" style="display: flex; align-items: flex-start; justify-content: space-between;">
-            <div>
-                <div style="display: flex; align-items: center; margin-bottom: 2px;">
-                    <!-- ud image name -->
-                    <img src="../assets/rblxswap_logo no bg.png" style="width: 22px; height: 22px; margin-right: 8px;" alt="Logo" class="no-drag">
-                    <p style="font-weight: 500; font-size: 1rem; color: #fff; margin: 0;">RblxSwap</p>
-                </div>
-                <div class="notice">
-                    <p>Made with love by @focat</p>
-                </div>
+    <div id="bg-img-layer"></div>
+    <div id="updateModal">
+        <div>
+            <h1 style="color:var(--text-main); font-size:1.1rem; margin-bottom:8px;">Update Available</h1>
+            <p id="updModalDesc" style="font-size:0.8rem; margin-bottom:16px;"></p>
+            <div style="display:flex; justify-content:center; gap:8px;">
+                <button type="button" style="padding:6px 12px; font-size:0.75rem;" onclick="ignore_update()">Ignore</button>
+                <button type="button" style="padding:6px 12px; font-size:0.75rem;" onclick="document.getElementById('updateModal').style.display='none'">Later</button>
+                <button type="button" class="btn-primary" style="padding:6px 12px; font-size:0.75rem; background:var(--good); color:#000; border:none;" onclick="download_update()">Download</button>
             </div>
-            <svg class="sys-close" onclick="window.close()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </div>
-
-        <div id="cleanerDiv" class="fade-in">
-            <form target="_blank" action="" onsubmit="return false">
-                <div class="fgrid">
-                    <label>Roblox Cache</label>
-                    <div class="frow">
-                        <span class="hint" style="color:#888;">Purges registry traces, temporary game files, and launcher caches entirely. This allows you to get onto a new account with minimal evidence to link to your previous account.</span>
-                    </div>
-                </div>
-                
-                <div class="fgrid" style="margin-top: 12px; background: rgba(236, 59, 71, 0.05); border: 1px solid rgba(236, 59, 71, 0.1); border-radius: 6px; padding: 10px;">
-                    <label style="color: var(--bad); font-size: 0.8rem;">Note</label>
-                    <div class="frow">
-                        <span class="hint" style="color:#aaa; font-size: 0.75rem;">Because we don't deliberately don't touch your web browser, <b>you must manually clear your cookies for Roblox.com</b> before logging into an alt account.</span>
-                    </div>
-                </div>
-
-                <div class="fbtns" style="margin-top: 20px;">
-                    <button id="btnCleanRun" type="button" onclick="run_cleaner();" style="border-color: rgba(59, 106, 234, 0.3); color: var(--good);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                        Clean Traces
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <div id="loaderForm" class="fade-in" style="display:none;">
-            <form target="_blank" action="" onsubmit="return false" style="display:flex; flex-direction:column; align-items:center; padding: 24px;">
-                <svg viewBox="0 0 50 50" style="width:28px;height:28px;animation:spin 1s linear infinite;margin-bottom:12px;">
-                    <circle id="loaderRing" cx="25" cy="25" r="20" fill="none" stroke="var(--good)" stroke-width="4" stroke-dasharray="31.4 100" stroke-linecap="round"></circle>
-                </svg>
-                <div style="font-weight:500; font-size:0.9rem; color:#d4d4d4;" id="loaderTitle">Initializing Sequence...</div>
-                
-                <div id="loaderLogs" style="width:100%; border-top:1px solid rgba(255,255,255,0.05); margin-top:14px; padding-top:10px; display:flex; flex-direction:column; gap:6px; font-family: inherit; font-size:0.75rem; color:#888;">
-                </div>
-            </form>
-        </div>
-
-        <div id="postCleanDiv" class="fade-in" style="display:none;">
-            <form target="_blank" action="" onsubmit="return false">
-                <div style="text-align:center; padding: 10px 0;">
-                    <p style="color:var(--good); font-size: 0.95rem; font-weight: 500; margin:0 0 6px;">Sweep Complete!</p>
-                    <p style="font-size:0.83rem; color:#aaa; margin:0 0 16px;">Would you like to spoof your MAC address(es) for extra safety? This may break your network connection, so only proceed if you are confident.</p>
-                </div>
-                <div class="fbtns">
-                    <button type="button" onclick="window.close();">
-                        No, Close App
-                    </button>
-                    <button type="button" onclick="show_mac_panel();" style="border-color: rgba(59, 106, 234, 0.3); color: var(--good);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
-                        Yes, Spoof
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <div id="revertConfirmDiv" class="fade-in" style="display:none;">
-            <form target="_blank" action="" onsubmit="return false">
-                <div style="text-align:center; padding: 10px 0;">
-                    <p style="color:var(--bad); font-size: 0.95rem; font-weight: 500; margin:0 0 8px;">Restore Spoofed Addresses?</p>
-                    <p style="font-size:0.83rem; color:#aaa; margin:0 0 16px; line-height: 1.4;">This will erase all spoofed network addresses and restore your original physical hardware addresses. Are you sure you want to proceed?</p>
-                </div>
-                <div class="fbtns">
-                    <button type="button" onclick="show_mac_panel();">
-                        Cancel
-                    </button>
-                    <button type="button" onclick="execute_rev_mac();" style="border-color: rgba(236, 59, 71, 0.2); color: var(--bad);">
-                        Yes, Erase
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <div id="macDiv" class="fade-in" style="display: none;">
-            <form target="_blank" action="" onsubmit="return false">
-                
-                <div class="flow-step">
-                    <div class="step-title">Which adapter do we spoof?</div>
-                    <div class="drop" style="width:100%; margin-bottom: 8px;">
-                        <select id="selAdapter" style="width: 100%; max-width: 100%; font-size: 0.8rem;"></select>
-                    </div>
-                    <p style="font-size: 0.72rem; color: #888; margin: 0 0 14px 0;">Hint: Your main internet adapter usually has "Wi-Fi" or "Ethernet" in its name.</p>
-                    
-                    <div class="frow" style="justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
-                        <label for="chkAllAdapters" style="margin:0; font-size:0.8rem; color:#aaa; cursor:pointer;">Spoof All Adapters Instead</label>
-                        <label class="switch">
-                            <input type="checkbox" id="chkAllAdapters">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flow-step">
-                    <div class="step-title">What should be the new spoofed MAC?</div>
-                    <div class="frow" style="margin-bottom: 14px;">
-                        <input id="inpMac" type="text" maxlength="17" placeholder="XX-XX-XX-XX-XX-XX" style="flex:1; font-family: monospace;">
-                        <button type="button" title="Shuffle MAC" onclick="rnd_mac()" style="padding: 6px; flex:none; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
-                        </button>
-                    </div>
-
-                    <div class="frow" style="justify-content: space-between; align-items: center;">
-                        <label style="margin:0; font-size:0.8rem; color:#aaa; display:flex; align-items:center;">
-                            OUI Mirror Mode
-                            <span class="tt-icon" data-tooltip="Keeps the first 3 bytes the same to match your real hardware's brand.">?</span>
-                        </label>
-                        <label class="switch">
-                            <input type="checkbox" id="chkMirror" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flow-step">
-                    <div class="step-title">DHCP (advanced)</div>
-                    <div class="frow" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <label style="margin:0; font-size:0.8rem; color:#aaa; display:flex; align-items:center;">
-                            DHCP Refresh
-                            <span class="tt-icon" data-tooltip="Gets a new local IP from your router. Disconnects you for ~5 seconds.">?</span>
-                        </label>
-                        <label class="switch">
-                            <input type="checkbox" id="chkDhcp" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="usage" style="padding: 10px 12px; line-height: 1.4;">
-                        <p class="u-title" style="color: var(--bad);">Warning: Potential Softblock</p>
-                        <p class="u-note">Spamming refresh can cause your ISP to softly block your device temporarily! Only do this when necessary. <br><span style="color:#aaa;">Tip: If you want to be overkill, you can rename your PC's host name in settings as you can be identified via hostname.</span></p>
-                    </div>
-                </div>
-
-                <div class="fbtns" style="margin-top:12px;">
-                    <button type="button" onclick="rev_mac();" style="border-color: rgba(236, 59, 71, 0.2); color: var(--bad);">
-                        Revert
-                    </button>
-                    <button type="button" onclick="run_spoof();" style="border-color: rgba(59, 106, 234, 0.3); color: var(--good);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        Apply Spoof
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
+
+    <div class="app-wrapper">
+        <div id="tooltip">Tooltip</div>
+
+        <div class="hdr">
+            <div class="logo-area" onclick="trigger_bao_confetti()" style="cursor:crosshair;" data-tooltip=":bao:">
+                <img src="../assets/rblxswap_logo no bg.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <span class="logo-text">RblxSwap</span>
+            </div>
+            <div class="ctrls">
+                <div class="sys-btn" data-tooltip="Settings" onclick="show_view('settings')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </div>
+                <div class="sys-btn close" data-tooltip="Close" onclick="hide_self()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="view-stack">
+            <!-- home -->
+            <div id="view_home" class="view active">
+                <h1 id="home_title">Ready to swap?</h1>
+                <p id="home_desc">Clean out traces and caches safely to log into another account without linking prior sessions.</p>
+                
+                <div style="display:flex; justify-content:center; gap: 8px;">
+                    <button class="btn-primary" onclick="start_clean()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        Clean Traces
+                    </button>
+                    <button onclick="show_view('mac')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                        Spoof MAC
+                    </button>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <a id="home_revert_btn" onclick="revert_all_macs_home()" style="color: var(--bad); font-size: 0.75rem; text-decoration: underline; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" data-tooltip="If you haven't spoofed your MAC(s) yet, you don't need to revert this.">Revert spoofed MACs</a>
+                </div>
+            </div>
+
+            <!-- loader -->
+            <div id="view_loader" class="view">
+                <svg viewBox="0 0 50 50" style="width:36px;height:36px;animation:spin 1s linear infinite;margin: 0 auto 16px auto;">
+                    <circle id="loaderRing" cx="25" cy="25" r="20" fill="none" stroke="var(--text-main)" stroke-width="3" stroke-dasharray="31.4 100" stroke-linecap="round"></circle>
+                </svg>
+                <h1 id="loaderTitle" style="font-size:1rem;font-weight:500;">Initializing 1337...</h1>
+                <p id="loaderDesc" style="font-size:0.75rem;margin-top:4px;">Leet opsec...</p>
+            </div>
+
+            <!-- after/post clean -->
+            <div id="view_post" class="view">
+                <h1 style="color: var(--good);">Sweep Complete!</h1>
+                <p style="padding: 0 20px;">Would you like to spoof your MAC address(es) for extra safety? This may disrupt network temporarily.</p>
+                
+                <div style="display:flex; justify-content:center; gap: 10px;">
+                    <button onclick="hide_self()">No, Hide</button>
+                    <button class="btn-primary" onclick="show_view('mac')">Yes, Spoof</button>
+                </div>
+            </div>
+
+            <!-- settings -->
+            <div id="view_settings" class="view" style="max-height: 250px; overflow-y:auto; -webkit-app-region: no-drag;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; width:100%; text-align:left;">
+                    <h1 style="margin:0; font-size:1rem;">Settings</h1>
+                    <button style="padding: 6px 12px; font-size: 0.75rem;" onclick="save_settings()">Done</button>
+                </div>
+                
+                <div class="fgrid">
+                    <label>Launcher Type</label>
+                    <label class="radio-opt"><input type="radio" name="setType" value="default" onchange="toggle_set_weao()"> Default / Other</label>
+                    <label class="radio-opt"><input type="radio" name="setType" value="weao" onchange="toggle_set_weao()"> WEAO RDD</label>
+                    
+                    <div id="setWeaoOpt" style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);">
+                        <p style="font-size: 0.47rem; color:#888; margin-bottom:6px; word-break:break-all; text-align: left;" id="txtSetWeao">Folder: Not selected</p>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="scan_set()">Auto Scan</button>
+                            <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="browse_set()">Browse Folder</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fgrid">
+                    <label>Spoofing Mode</label>
+                    <label class="radio-opt"><input type="radio" name="spoofMode" value="simple" onchange="toggle_spoof_mode()"> Simple <span style="font-size:0.6rem; color:#888;">(Auto-Spoof All)</span></label>
+                    <label class="radio-opt"><input type="radio" name="spoofMode" value="advanced" onchange="toggle_spoof_mode()"> Advanced <span style="font-size:0.6rem; color:#888;">(Custom Mac, DHCP)</span></label>
+                </div>
+
+                <div class="fgrid">
+                    <label>Themes</label>
+                    <div class="theme-row">
+                        <div>
+                            <p class="theme-label">Background Base</p>
+                        </div>
+                        <div class="theme-picker">
+                            <input type="color" data-tk="bg-base" onchange="apply_theme(this)">
+                            <span class="hexTxt">#101010</span>
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <div>
+                            <p class="theme-label">Background Accent</p>
+                        </div>
+                        <div class="theme-picker">
+                            <input type="color" data-tk="bg-accent" onchange="apply_theme(this)">
+                            <span class="hexTxt">#191919</span>
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <div>
+                            <p class="theme-label">Text Color</p>
+                        </div>
+                        <div class="theme-picker">
+                            <input type="color" data-tk="text-main" onchange="apply_theme(this)">
+                            <span class="hexTxt">#f0f0f0</span>
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <div>
+                            <p class="theme-label">Success Accent (Good)</p>
+                        </div>
+                        <div class="theme-picker">
+                            <input type="color" data-tk="good" onchange="apply_theme(this)">
+                            <span class="hexTxt">#4ade80</span>
+                        </div>
+                    </div>
+                    <div class="theme-row">
+                        <div>
+                            <p class="theme-label">Error Accent (Bad)</p>
+                        </div>
+                        <div class="theme-picker">
+                            <input type="color" data-tk="bad" onchange="apply_theme(this)">
+                            <span class="hexTxt">#f87171</span>
+                        </div>
+                    </div>
+                    <div class="theme-row" style="margin-top:8px; padding-top:8px;">
+                        <div style="flex:1;">
+                            <p class="theme-label" style="display:flex; justify-content:space-between; align-items:center;">
+                                Background Image 
+                                <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="document.getElementById('bgImgFile').click()">Choose File...</button>
+                            </p>
+                            <input type="file" id="bgImgFile" accept="image/*" style="display:none;" onchange="handle_bg_file(this)">
+                            <input type="hidden" data-tk="bg-img" id="bgImgHidden">
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                <p id="bgImgName" style="font-size:0.7rem; color:var(--text-dim); margin:0; word-break:break-all; padding-right:8px;">No file selected</p>
+                                <button type="button" id="bgImgClear" style="display:none; padding:4px 8px; font-size:0.7rem; background:rgba(248, 113, 113, 0.1); border:1px solid transparent; color:var(--bad);" onclick="clear_bg_file()">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="theme-row" style="margin-top:8px;">
+                        <div>
+                            <p class="theme-label">Hide Grid Overlay</p>
+                        </div>
+                        <div>
+                            <input type="checkbox" data-tk="hide-grid" onchange="apply_theme(this)" style="transform: scale(1.2);">
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; display:flex; justify-content:center;">
+                        <button type="button" class="btn-danger" style="font-size: 0.7rem; padding: 6px 12px; border-color:transparent; background: rgba(248, 113, 113, 0.1);" onclick="reset_theme()">Restore Defaults</button>
+                    </div>
+                </div>
+
+                <div class="fgrid">
+                    <label>Updates</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.8rem; color:#aaa;" id="updStatus">Checking...</span>
+                        <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="check_upd_manual()">Check Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- mac -->
+            <div id="view_mac" class="view" style="max-height: 250px; overflow-y:auto; -webkit-app-region: no-drag;">
+                <div id="mac_advanced_ui">
+                    <p style="font-size:0.75rem; color:#888; margin-bottom:12px;">These are advanced options. If you don't know what these do, it's safer to choose "Simple MAC" in Settings.</p>
+                    <div class="fgrid" style="padding:12px; margin-bottom: 6px;">
+                        <label>Adapter</label>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <select id="selAdapter" style="flex:1; font-size:0.75rem;"></select>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="margin:0; font-size:0.75rem; color:#aaa;">Spoof All Adapters Instead</label>
+                            <label class="switch">
+                                <input type="checkbox" id="chkAllAdapters" onchange="toggle_all_adapters()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="fgrid" style="padding:12px; margin-bottom: 6px;">
+                        <label>Spoofed MAC</label>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                            <input type="text" id="inpMac" placeholder="XX-XX-XX-XX-XX-XX" maxlength="17" style="font-family:monospace; text-align:center; flex:1;">
+                            <button type="button" style="padding:6px 10px; font-size:0.75rem;" onclick="rnd_mac()" data-tooltip="Shuffle MAC">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20L21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
+                            </button>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Keeps the first 3 bytes the same to match your real hardware's brand.">
+                                OUI Mirror Mode
+                                <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                            </label>
+                            <label class="switch">
+                                <input type="checkbox" id="chkMirror" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Gets a new local IP from your router. Disconnects you for ~5 seconds. Warning: Softblock risk if spammed.">
+                                DHCP Refresh
+                                <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                            </label>
+                            <label class="switch">
+                                <input type="checkbox" id="chkDhcp" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mac_simple_ui" style="display:none; text-align:center; margin-bottom: 12px; background:var(--bg-accent); padding:20px; border-radius:12px; border:1px solid var(--border);">
+                    <h1 style="font-size:1.1rem; margin-bottom:4px;">Simple MAC</h1>
+                    <p style="font-size:0.75rem; margin-bottom:0;">Easy version which uses OUI & spoofs all adapters. (you may enable advanced options in Settings!)</p>
+                </div>
+                
+                <div id="macLogs" style="background:#0c0c0c; border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:8px; height:50px; overflow-y:auto; scrollbar-width:none; font-size:0.7rem; text-align:left; color:#888; margin-bottom:12px;">
+                    Waiting to spoof...
+                </div>
+
+                <div style="display:flex; justify-content:center; gap:8px;">
+                    <button class="btn-danger" style="padding:8px 16px; font-size:0.75rem; background:rgba(248, 113, 113, 0.1); border-color:transparent;" onclick="rev_mac()">Revert</button>
+                    <button class="btn-primary" style="padding:8px 16px; font-size:0.75rem;" onclick="run_spoof()">Spoof</button>
+                    <button style="padding:8px 16px; font-size:0.75rem;" onclick="show_view('home')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- footer (durrrr) -->
+        <div class="footer">
+            <div class="badge" id="vBadge" onclick="check_upd_manual()" style="cursor:pointer;" data-tooltip="Check for updates">vX.X.X</div>
+            <div class="badge status-badge" id="botStatus">Waiting...</div>
+        </div>
     </div>
 
     <script>
-        const rblx_sys = window.launcher; 
-        
-        const ui_panels = {
-            cleaner: document.getElementById('cleanerDiv'),
-            loader: document.getElementById('loaderForm'),
-            postclean: document.getElementById('postCleanDiv'),
-            revert_confirm: document.getElementById('revertConfirmDiv'),
-            mac: document.getElementById('macDiv')
-        };
+        const s = window.launcher;
+        let c_config = { launcherType: 'default', weblauncherDir: null, theme: null, ignoredUpdate: null };
+        let cur_ver = '';
+        let upd_url = '';
+        let upd_ver = '';
 
-        function show_panel(key) {
-            Object.values(ui_panels).forEach(p => p.style.display = 'none');
-            ui_panels[key].style.display = 'block';
+        function show_view(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view_' + id).classList.add('active');
+            
+            if(id === 'settings') load_settings_ui();
+            if(id === 'mac') fetch_hardware();
+        }
+        function hide_self() {
+            if(s) s.hideWindow();
+            show_view('home');
+        }
+
+        const default_theme = { 'bg-base': '#101010', 'bg-accent': '#191919', 'text-main': '#f0f0f0', 'good': '#4ade80', 'bad': '#f87171', 'bg-img': '', 'hide-grid': false };
+        
+        function apply_theme_var(key, val) {
+            if(key === 'bg-img') {
+                document.getElementById('bg-img-layer').style.backgroundImage = val ? `url('${val}')` : 'none';
+            } else if(key === 'hide-grid') {
+                document.documentElement.style.setProperty('--grid-display', val ? 'none' : 'block');
+            } else {
+                document.documentElement.style.setProperty('--' + key, val);
+            }
+
+            const inp = document.querySelector(`input[data-tk="${key}"]`);
+            if(inp) {
+                if(inp.type === 'checkbox') {
+                    inp.checked = (val === true || val === 'true');
+                } else {
+                    inp.value = val;
+                    if(inp.nextElementSibling && inp.nextElementSibling.classList.contains('hexTxt')) {
+                        inp.nextElementSibling.innerText = val;
+                    }
+                }
+            }
+
+            if(key === 'bg-img') {
+                const nameEl = document.getElementById('bgImgName');
+                const clearEl = document.getElementById('bgImgClear');
+                if(val) {
+                    nameEl.innerText = val.split('/').pop().split('\\').pop();
+                    if(clearEl) clearEl.style.display = 'inline-flex';
+                } else {
+                    nameEl.innerText = 'No file selected';
+                    if(clearEl) clearEl.style.display = 'none';
+                }
+            }
+        }
+
+        function apply_theme(input) {
+            const key = input.getAttribute('data-tk');
+            const val = input.type === 'checkbox' ? input.checked : input.value;
+            apply_theme_var(key, val);
+            
+            if(!c_config.theme) c_config.theme = { ...default_theme };
+            c_config.theme[key] = val;
+            if(s) s.setConfig(c_config);
+        }
+
+        function reset_theme() {
+            c_config.theme = { ...default_theme };
+            Object.keys(c_config.theme).forEach(k => apply_theme_var(k, c_config.theme[k]));
+            if(s) s.setConfig(c_config);
+        }
+
+        function handle_bg_file(input) {
+            if(input.files && input.files[0]) {
+                const path = "file:///" + input.files[0].path.replace(/\\/g, '/');
+                document.getElementById('bgImgHidden').value = path;
+                const pathParts = input.files[0].path.split(/[\\/]/);
+                document.getElementById('bgImgName').innerText = pathParts[pathParts.length - 1];
+                document.getElementById('bgImgClear').style.display = 'inline-flex';
+                apply_theme(document.getElementById('bgImgHidden'));
+            }
+        }
+
+        function clear_bg_file() {
+            document.getElementById('bgImgFile').value = '';
+            document.getElementById('bgImgHidden').value = '';
+            document.getElementById('bgImgName').innerText = 'No file selected';
+            document.getElementById('bgImgClear').style.display = 'none';
+            apply_theme(document.getElementById('bgImgHidden'));
+        }
+
+        async function init() {
+
+            if(!s) return;
+
+            c_config = await s.getConfig();
+            cur_ver = await s.getVersion();
+            document.getElementById('vBadge').innerText = cur_ver;
+
+            if(!c_config.theme) c_config.theme = { ...default_theme };
+            
+            Object.keys(default_theme).forEach(k => { if(c_config.theme[k] === undefined) c_config.theme[k] = default_theme[k]; });
+            Object.keys(c_config.theme).forEach(k => apply_theme_var(k, c_config.theme[k]));
+
+            //-- updates
+            const up = await s.checkUpdates();
+            if(up.updateAvailable) {
+                upd_url = up.url;
+                upd_ver = up.version;
+                document.getElementById('updStatus').innerHTML = '<span style="color:var(--good); cursor:pointer;" onclick="s.openExternal(\''+up.url+'\')">Download ' + up.version + '</span>';
+
+                document.getElementById('vBadge').style.cursor = 'pointer';
+                document.getElementById('vBadge').style.borderColor = 'var(--good)';
+                document.getElementById('vBadge').style.color = 'var(--text-main)';
+                document.getElementById('vBadge').style.background = 'rgba(74, 222, 128, 0.2)';
+                
+                //-- if not ingored, then we show
+                if(c_config.ignoredUpdate !== up.version) {
+                    document.getElementById('updModalDesc').innerHTML = `Version <b>${up.version}</b> is available!`;
+                    document.getElementById('updateModal').style.display = 'flex';
+                }
+            } else {
+                document.getElementById('updStatus').innerText = 'Up to date!';
+            }
+        }
+
+        async function ignore_update() {
+            c_config.ignoredUpdate = upd_ver;
+            if(s) await s.setConfig(c_config);
+            document.getElementById('updateModal').style.display = 'none';
+        }
+
+        function download_update() {
+            if(s && upd_url) s.openExternal(upd_url);
+            document.getElementById('updateModal').style.display = 'none';
+        }
+
+        function load_settings_ui() {
+            document.querySelector(`input[name="setType"][value="${c_config.launcherType || 'default'}"]`).checked = true;
+            document.querySelector(`input[name="spoofMode"][value="${c_config.spoofMode || 'simple'}"]`).checked = true;
+            toggle_set_weao();
+            toggle_spoof_mode();
+            if(c_config.weblauncherDir) {
+                document.getElementById('txtSetWeao').innerText = c_config.weblauncherDir;
+            }
+            if(c_config.theme) {
+                Object.keys(c_config.theme).forEach(k => apply_theme_var(k, c_config.theme[k]));
+            }
+        }
+
+        function toggle_set_weao() {
+            const isWeao = document.querySelector('input[name="setType"]:checked').value === 'weao';
+            document.getElementById('setWeaoOpt').style.display = isWeao ? 'block' : 'none';
+        }
+
+        function toggle_spoof_mode() {
+            const isSimple = document.querySelector('input[name="spoofMode"]:checked')?.value === 'simple';
+            document.getElementById('mac_advanced_ui').style.display = isSimple ? 'none' : 'block';
+            document.getElementById('mac_simple_ui').style.display = isSimple ? 'block' : 'none';
+        }
+
+        async function scan_set() {
+            document.getElementById('txtSetWeao').innerText = 'Scanning...';
+            const res = await s.scanWeblauncher();
+            if(res) {
+                c_config.weblauncherDir = res;
+                document.getElementById('txtSetWeao').innerText = res;
+            } else {
+                document.getElementById('txtSetWeao').innerText = 'Not found. Please Browse.';
+            }
+        }
+
+        async function browse_set() {
+            const res = await s.selectDir();
+            if(res) {
+                c_config.weblauncherDir = res;
+                document.getElementById('txtSetWeao').innerText = res;
+            }
+        }
+
+        async function save_settings() {
+            c_config.launcherType = document.querySelector('input[name="setType"]:checked').value;
+            c_config.spoofMode = document.querySelector('input[name="spoofMode"]:checked')?.value || 'simple';
+            
+            if(c_config.launcherType === 'weao' && !c_config.weblauncherDir) {
+                alert("Please select your WEAO Web Launcher directory.");
+                return;
+            }
+            if(c_config.launcherType !== 'weao') c_config.weblauncherDir = null;
+
+            await s.setConfig(c_config);
+            show_view('home');
+        }
+
+        async function check_upd_manual() {
+            const btn = document.getElementById('vBadge');
+            const originalText = btn.innerText;
+            btn.innerText = 'Checking...';
+            document.getElementById('updStatus').innerText = 'Checking...';
+
+            const up = await s.checkUpdates();
+            if(up.updateAvailable) {
+                document.getElementById('updStatus').innerHTML = `<span style="color:var(--good); cursor:pointer;" onclick="s.openExternal('${up.url}')">Download ${up.version}</span>`;
+                btn.innerText = 'Update Available!';
+                btn.style.borderColor = 'var(--good)';
+                btn.style.color = 'var(--text-main)';
+                btn.style.background = 'rgba(74, 222, 128, 0.2)';
+            } else {
+                document.getElementById('updStatus').innerText = 'Up to date!';
+                btn.innerText = 'Up to date!';
+                setTimeout(() => {
+                    if (btn.innerText === 'Up to date!') btn.innerText = originalText;
+                }, 2000);
+            }
         }
 
         let is_sweeping = false;
+        async function start_clean() {
+            if(is_sweeping || !s) return;
+            
+            if(c_config.launcherType === 'weao' && !c_config.weblauncherDir) {
+                show_view('settings');
+                alert("WEAO selected but no path found. Configure it first!");
+                return;
+            }
 
-        async function run_cleaner() {
-            if(is_sweeping || !rblx_sys) return;
             is_sweeping = true;
+            show_view('loader');
+            document.getElementById('botStatus').innerText = 'Working...';
+            document.getElementById('loaderTitle').innerText = 'Initializing...';
+            document.getElementById('loaderTitle').style.color = '#fff';
+            document.getElementById('loaderRing').setAttribute('stroke', 'var(--text-main)');
             
-            show_panel('loader');
-            document.getElementById('loaderLogs').innerHTML = '';
-            document.getElementById('loaderTitle').innerText = 'Initializing Sequence...';
-            document.getElementById('loaderTitle').style.color = '#d4d4d4';
-            document.getElementById('loaderRing').setAttribute('stroke', 'var(--good)');
-            
-            await rblx_sys.runBypass();
+            await s.runBypass(c_config.weblauncherDir);
         }
 
-        // ipc events
-        if (rblx_sys) {
-            rblx_sys.onLog(d => {
-                const log_box = document.getElementById('loaderLogs');
-                
-                let col = '#666';
-                if (d.level === 'error') col = 'var(--bad)';
-                if (d.level === 'success') col = 'var(--good)';
-                
-                const log_line = document.createElement('div');
-                log_line.style.color = col;
-                
-                log_line.innerText = "> " + d.message;
-                
-                log_box.appendChild(log_line);
-                if(log_box.children.length > 6) {
-                    log_box.removeChild(log_box.firstChild);
-                }
+        if(s) {
+            s.onLog(d => {
+                document.getElementById('loaderDesc').innerText = d.message;
             });
-
-            rblx_sys.onStatus(d => {
-                if(d.status) {
-                    document.getElementById('loaderTitle').innerText = d.status;
-                }
+            s.onStatus(d => {
+                if(d.status) document.getElementById('loaderTitle').innerText = d.status.charAt(0).toUpperCase() + d.status.slice(1);
             });
-
-            rblx_sys.onComplete(d => {
+            s.onComplete(d => {
                 is_sweeping = false;
-                const ring = document.getElementById('loaderRing');
-                if (d.success !== false) {
-                    ring.setAttribute('stroke', 'var(--good)');
-                    setTimeout(() => show_panel('postclean'), 800);
+                if(d.success !== false) {
+                    document.getElementById('botStatus').innerText = 'Cleaned';
+                    setTimeout(() => show_view('post'), 600);
                 } else {
-                    ring.setAttribute('stroke', 'var(--bad)');
                     document.getElementById('loaderTitle').style.color = 'var(--bad)';
-                    const log_box = document.getElementById('loaderLogs');
-                    log_box.innerHTML += '<div style="color:var(--bad); margin-top:8px;">Execution Failed. Please restart.</div>';
+                    document.getElementById('loaderTitle').innerText = 'Failed';
+                    document.getElementById('loaderRing').setAttribute('stroke', 'var(--bad)');
+                    document.getElementById('botStatus').innerText = 'Error';
+                    setTimeout(() => show_view('home'), 3000);
                 }
             });
         }
 
-        let hw_list = [];
-        let hw_target = null;
-
-        function show_mac_panel() {
-            show_panel('mac');
-            fetch_hardware();
-        }
-
-        async function fetch_hardware() {
-            if (!rblx_sys) return;
-            hw_list = await rblx_sys.getAdapters();
-            if (!hw_target && hw_list.length > 0) hw_target = hw_list[0].Name;
-            
-            const drop_sel = document.getElementById('selAdapter');
-            drop_sel.innerHTML = '';
-            
-            hw_list.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a.Name;
-                opt.textContent = a.InterfaceDescription || a.Name;
-                if(a.Name === hw_target) opt.selected = true;
-                drop_sel.appendChild(opt);
+        const tip = document.getElementById('tooltip');
+        document.querySelectorAll('[data-tooltip]').forEach(el => {
+            el.addEventListener('mousemove', e => {
+                tip.innerText = el.getAttribute('data-tooltip');
+                tip.style.opacity = '1';
+                
+                let x = e.clientX;
+                let y = e.clientY + 20;
+                
+                const tw = tip.offsetWidth || 150;
+                const th = tip.offsetHeight || 30;
+                
+                if (x + (tw / 2) > window.innerWidth - 10) x = window.innerWidth - (tw / 2) - 10;
+                if (x - (tw / 2) < 10) x = (tw / 2) + 10;
+                if (y + th > window.innerHeight - 10) y = e.clientY - th - 5;
+                
+                tip.style.left = x + 'px';
+                tip.style.top = y + 'px';
             });
-            
-            const focus = hw_list.find(x => x.Name === hw_target);
-            if(focus && !document.getElementById('inpMac').value) {
-                document.getElementById('inpMac').value = focus.MacAddress;
-            }
+            el.addEventListener('mouseleave', () => tip.style.opacity = '0');
+            el.addEventListener('mousedown', () => tip.style.opacity = '0');
+        });
+
+        let hw_list = [], hw_target = null;
+        let is_all_adapters = false;
+        
+        async function fetch_hardware() { 
+            if(!s) return; 
+            hw_list = await s.getAdapters(); 
+            const sb = document.getElementById('selAdapter'); 
+            sb.innerHTML = ''; 
+            hw_list.forEach(a => {
+                const o = document.createElement('option'); 
+                o.value = a.Name; 
+                o.textContent = a.InterfaceDescription; 
+                sb.appendChild(o);
+            }); 
+            if(hw_list.length > 0) {
+                hw_target = hw_list[0].Name; 
+                document.getElementById('inpMac').value = hw_list[0].MacAddress;
+            } 
         }
 
-        // adapter change detect
-        document.getElementById('selAdapter').addEventListener('change', (e) => {
-            hw_target = e.target.value;
-            const updated = hw_list.find(x => x.Name === hw_target);
-            if(updated) {
-                document.getElementById('inpMac').value = updated.MacAddress;
-            }
+        function toggle_all_adapters() {
+            is_all_adapters = document.getElementById('chkAllAdapters').checked;
+            document.getElementById('selAdapter').style.opacity = is_all_adapters ? '0.5' : '1';
+            document.getElementById('inpMac').style.opacity = is_all_adapters ? '0.5' : '1';
+            document.getElementById('selAdapter').disabled = is_all_adapters;
+            document.getElementById('inpMac').disabled = is_all_adapters;
+        }
+
+        document.getElementById('selAdapter')?.addEventListener('change', e => { 
+            hw_target = e.target.value; 
+            const d = hw_list.find(x => x.Name === hw_target); 
+            if(d) document.getElementById('inpMac').value = d.MacAddress; 
         });
 
-        // all adapters toggle lock
-        document.getElementById('chkAllAdapters').addEventListener('change', (e) => {
-            const is_all = e.target.checked;
-            document.getElementById('inpMac').disabled = is_all;
-            document.getElementById('selAdapter').disabled = is_all;
-            document.getElementById('inpMac').style.opacity = is_all ? '0.5' : '1';
-            document.getElementById('selAdapter').style.opacity = is_all ? '0.5' : '1';
-        });
-
-        function rnd_mac() {
+        function rnd_mac() { 
             const trg = hw_list.find(x => x.Name === hw_target);
-            const is_mirror = document.getElementById('chkMirror').checked;
+            const is_mirror = document.getElementById('chkMirror')?.checked;
             const l_bit = ['2','6','A','E'];
             let build = "";
             
             if(is_mirror && trg && trg.MacAddress && trg.MacAddress.length === 17) {
-                // match 3 bytes for OUI but enforce Locally Administered Bit on the 2nd char so wireless drivers accept it
                 build = trg.MacAddress[0] + l_bit[Math.floor(Math.random()*4)] + trg.MacAddress.substring(2, 9);
             } else {
-                // generic windows byte rule
                 const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-                build = hx() + l_bit[Math.floor(Math.random()*4)] + "-" + hx()+hx() + "-" + hx()+hx() + "-";
+                build = hx() + l_bit[Math.floor(Math.random()*4)] + '-' + hx()+hx() + '-' + hx()+hx() + '-';
             }
             
-            const hx_gen = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-            const tail = hx_gen()+hx_gen() + "-" + hx_gen()+hx_gen() + "-" + hx_gen()+hx_gen();
+            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
+            const tail = h()+h() + "-" + h()+h() + "-" + h()+h();
             
             document.getElementById('inpMac').value = build + tail;
         }
 
-        function mac_log(msg, col) {
-            const log_box = document.getElementById('loaderLogs');
-            const log_line = document.createElement('div');
-            log_line.style.color = col || '#888';
-            log_line.innerText = "> " + msg;
-            log_box.appendChild(log_line);
-            if(log_box.children.length > 7) {
-                log_box.removeChild(log_box.firstChild);
-            }
+        function mlog(msg, col = '#888') {
+            const lb = document.getElementById('macLogs');
+            lb.innerHTML += `<div style="color:${col}">> ${msg}</div>`;
+            lb.scrollTop = lb.scrollHeight;
         }
 
-        async function run_spoof() {
-            const mac_target = document.getElementById('inpMac').value;
-            const run_dhcp = document.getElementById('chkDhcp').checked;
-            const spoof_all = document.getElementById('chkAllAdapters').checked;
+        async function run_spoof() { 
+            if(!s) return; 
+            document.getElementById('macLogs').innerHTML = '';
             
-            show_panel('loader');
-            document.getElementById('loaderTitle').innerText = 'Spoofing...';
-            document.getElementById('loaderTitle').style.color = '#d4d4d4';
-            document.getElementById('loaderRing').setAttribute('stroke', 'var(--good)');
-            document.getElementById('loaderLogs').innerHTML = '';
+            const isSimple = document.querySelector('input[name="spoofMode"]:checked')?.value === 'simple';
+            const targets = (is_all_adapters || isSimple) ? hw_list : hw_list.filter(x => x.Name === hw_target);
+            const run_dhcp = isSimple ? false : document.getElementById('chkDhcp').checked;
+            
+            if(targets.length === 0) {
+                mlog("No valid adapters found to spoof.", 'var(--bad)');
+                return;
+            }
 
             let err_count = 0;
-            
-            if (spoof_all) {
-                let count = 0;
-                const l_bit_arr = ['2','6','A','E'];
-                for (let h of hw_list) {
-                    if (!h.InterfaceDescription) continue;
-                    
-                    let build = "02-00-00-";
-                    if (h.MacAddress && h.MacAddress.length === 17) {
-                        // ensure 2nd char enforces Locally Administered Bit for wireless drivers
-                        build = h.MacAddress[0] + l_bit_arr[Math.floor(Math.random()*4)] + h.MacAddress.substring(2, 9);
+
+            for(const t of targets) {
+                let currentNewMac = isSimple ? generate_simple_mac(t) : document.getElementById('inpMac').value;
+                mlog(`Spoofing [${t.Name}] to ${currentNewMac}...`, '#aaa');
+                try {
+                    const res = await s.spoofMac(t.DriverDesc || '', currentNewMac);
+                    if(res) {
+                        mlog('Restarting adapter...', '#aaa');
+                        await s.restartAdapter(t.Name);
+                        mlog(`Done [${t.Name}]`, 'var(--good)');
+                    } else {
+                        mlog(`Failed [${t.Name}] - Run as admin?`, 'var(--bad)');
+                        err_count++;
                     }
-                    
-                    const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-                    const tail = hx()+hx() + "-" + hx()+hx() + "-" + hx()+hx();
-                    
-                    mac_log(`Spoofing ${h.Name}...`, '#888');
-                    const res = await rblx_sys.spoofMac(h.InterfaceDescription, build + tail);
-                    await rblx_sys.restartAdapter(h.Name);
-                    
-                    if (res) { mac_log(`Success: ${h.Name}`, 'var(--good)'); count++; }
-                    else { mac_log(`Failed: ${h.Name}`, 'var(--bad)'); err_count++; }
-                }
-                mac_log(`Applied to ${count} adapters.`, '#ccc');
-            } else {
-                const trg = hw_list.find(x => x.Name === hw_target);
-                if (trg) {
-                    mac_log(`Spoofing ${trg.Name}...`, '#888');
-                    const res = await rblx_sys.spoofMac(trg.InterfaceDescription, mac_target);
-                    await rblx_sys.restartAdapter(trg.Name);
-                    
-                    if (res) mac_log('Successfully spoofed MAC.', 'var(--good)');
-                    else { mac_log('Failed to spoof MAC. (Run as Admin?)', 'var(--bad)'); err_count++; }
+                } catch(e) {
+                    mlog(`Failed [${t.Name}] - ${e.message}`, 'var(--bad)');
+                    err_count++;
                 }
             }
-            
             if(run_dhcp) {
-                mac_log('Refreshing DHCP/IP...', '#888');
-                const d_res = await rblx_sys.dhcpRefresh();
-                if(d_res) mac_log('DHCP leases renewed.', 'var(--good)');
-                else { mac_log('DHCP timeout/failed.', 'var(--bad)'); err_count++; }
+                mlog('Updating DHCP...', '#aaa');
+                await s.dhcpRefresh();
             }
-            
-            await fetch_hardware();
-            
-            if (err_count > 0) {
-                document.getElementById('loaderRing').setAttribute('stroke', 'var(--bad)');
-                document.getElementById('loaderTitle').style.color = 'var(--bad)';
-                document.getElementById('loaderTitle').innerText = 'Completed with Errors';
-                document.getElementById('loaderLogs').innerHTML += `<button onclick="show_mac_panel()" style="margin-top:12px; padding:6px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#ccc; border-radius:4px; outline:none; cursor:pointer;">Acknowledge & Return</button>`;
+            if(err_count > 0) {
+                mlog(`Completed with ${err_count} errors.`, 'var(--bad)');
             } else {
-                document.getElementById('loaderTitle').innerText = 'Spoof Complete!';
-                setTimeout(() => show_mac_panel(), 2000);
+                mlog('MAC Spoofing Complete.', 'var(--good)');
             }
         }
 
-        function rev_mac() {
-            show_panel('revert_confirm');
+        function generate_simple_mac(adapter) {
+            const l_bit = ['2','6','A','E'];
+            let build = "";
+            if(adapter && adapter.MacAddress && adapter.MacAddress.length === 17) {
+                build = adapter.MacAddress[0] + l_bit[Math.floor(Math.random()*4)] + adapter.MacAddress.substring(2, 9);
+            } else {
+                const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
+                build = hx() + l_bit[Math.floor(Math.random()*4)] + '-' + hx()+hx() + '-' + hx()+hx() + '-';
+            }
+            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
+            return build + h()+h() + "-" + h()+h() + "-" + h()+h();
         }
 
-        async function execute_rev_mac() {
-            const spoof_all = document.getElementById('chkAllAdapters').checked;
+        async function rev_mac() { 
+            if(!s) return; 
+            document.getElementById('macLogs').innerHTML = '';
             
-            show_panel('loader');
-            document.getElementById('loaderTitle').innerText = 'Reverting spoof...';
-            document.getElementById('loaderTitle').style.color = '#d4d4d4';
-            document.getElementById('loaderRing').setAttribute('stroke', 'var(--good)');
-            document.getElementById('loaderLogs').innerHTML = '';
+            const isSimple = document.querySelector('input[name="spoofMode"]:checked')?.value === 'simple';
+            const run_dhcp = isSimple ? false : document.getElementById('chkDhcp').checked;
+            const targets = (is_all_adapters || isSimple) ? hw_list : hw_list.filter(x => x.Name === hw_target);
+            
+            if(targets.length === 0) {
+                mlog("No valid adapters found to revert.", 'var(--bad)');
+                return;
+            }
 
             let err_count = 0;
-            
-            if (spoof_all) {
-                for (let h of hw_list) {
-                    if (!h.InterfaceDescription) continue;
-                    mac_log(`Reverting ${h.Name}...`, '#888');
-                    const res = await rblx_sys.resetMac(h.InterfaceDescription);
-                    await rblx_sys.restartAdapter(h.Name);
-                    if (res) mac_log(`Restored: ${h.Name}`, 'var(--good)');
-                    else { mac_log(`Failed: ${h.Name}`, 'var(--bad)'); err_count++; }
-                }
-            } else {
-                const trg = hw_list.find(x => x.Name === hw_target);
-                if(trg) {
-                    mac_log(`Reverting ${trg.Name}...`, '#888');
-                    const res = await rblx_sys.resetMac(trg.InterfaceDescription);
-                    await rblx_sys.restartAdapter(trg.Name);
-                    if (res) mac_log('Modifications erased.', 'var(--good)');
-                    else { mac_log('Failed to erase modifications.', 'var(--bad)'); err_count++; }
+
+            for(const t of targets) {
+                mlog(`Reverting [${t.Name}]...`, '#aaa');
+                try {
+                    const res = await s.resetMac(t.DriverDesc || '');
+                    if(res) {
+                        mlog('Restarting adapter...', '#aaa');
+                        await s.restartAdapter(t.Name);
+                        mlog(`Done [${t.Name}]`, 'var(--good)');
+                    } else {
+                        mlog(`Failed to revert [${t.Name}] - Run as admin?`, 'var(--bad)');
+                        err_count++;
+                    }
+                } catch(e) {
+                    mlog(`Failed [${t.Name}] - ${e.message}`, 'var(--bad)');
+                    err_count++;
                 }
             }
-            
-            await fetch_hardware();
-            
-            if (err_count > 0) {
-                document.getElementById('loaderRing').setAttribute('stroke', 'var(--bad)');
-                document.getElementById('loaderTitle').style.color = 'var(--bad)';
-                document.getElementById('loaderTitle').innerText = 'Completed with Errors';
-                document.getElementById('loaderLogs').innerHTML += `<button onclick="show_mac_panel()" style="margin-top:12px; padding:6px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#ccc; border-radius:4px; outline:none; cursor:pointer;">Acknowledge & Return</button>`;
+            if(run_dhcp) {
+                mlog('Updating DHCP...', '#aaa');
+                await s.dhcpRefresh();
+            }
+            if(err_count > 0) {
+                mlog(`Completed with ${err_count} errors.`, 'var(--bad)');
             } else {
-                document.getElementById('loaderTitle').innerText = 'Revert Complete!';
-                setTimeout(() => show_mac_panel(), 2000);
+                mlog('Reversion Complete.', 'var(--good)');
             }
         }
+
+        function trigger_bao_confetti() {
+            for(let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const img = document.createElement('img');
+                    img.src = '../assets/bao.png';
+                    img.className = 'bao-confetti';
+                    img.style.left = Math.random() * 100 + 'vw';
+                    const scale = 0.5 + Math.random() * 1;
+                    img.style.width = (32 * scale) + 'px';
+                    img.style.height = (32 * scale) + 'px';
+                    img.style.animationDuration = (1.5 + Math.random()) + 's';
+                    img.style.animationDelay = (Math.random() * 0.5) + 's';
+                    document.body.appendChild(img);
+                    setTimeout(() => { img.remove(); }, 3000);
+                }, i * 50);
+            }
+        }
+
+        async function revert_all_macs_home() {
+            if(!s) return;
+            const btn = document.getElementById('home_revert_btn');
+            const ogText = btn.innerText;
+            btn.innerText = "Reverting...";
+            btn.style.pointerEvents = "none";
+            
+            await fetch_hardware();
+            let all_hw = hw_list;
+            let err_count = 0;
+            
+            for(const t of all_hw) {
+                try {
+                    const res = await s.resetMac(t.DriverDesc || '');
+                    if(res) {
+                        await s.restartAdapter(t.Name);
+                    } else {
+                        err_count++;
+                    }
+                } catch(e) { err_count++; }
+            }
+            
+            btn.innerText = err_count > 0 ? "Reverted (w/ errors)" : "Reverted successfully!";
+            setTimeout(() => { 
+                btn.innerText = ogText; 
+                btn.style.pointerEvents = "auto";
+            }, 3000);
+        }
+
+        init();
     </script>
 </body>
 </html>
