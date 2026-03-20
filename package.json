@@ -1,0 +1,38 @@
+{
+  "name": "rblxswap-launcher",
+  "version": "0.1.0",
+  "description": "Swap between alts whilst evading Roblox's BanAsync API.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electronmon ."
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "",
+  "license": "MIT",
+  "build": {
+    "appId": "com.rblxswap.utility",
+    "files": [
+      "package.json",
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "icon": "icon.ico",
+      "requestedExecutionLevel": "requireAdministrator",
+      "target": "portable",
+      "artifactName": "rblxswap.${ext}"
+    },
+    "portable": {
+      "requestExecutionLevel": "admin"
+    }
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electronmon": "^2.0.2"
+  }
+}

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RblxSwap</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        html {
+            background: transparent !important;
+        }
+
+        body {
+            user-select: none;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            background: transparent;
+            -webkit-app-region: drag;
+        }
+
+        .app-wrapper {
+            background: #161616;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            box-sizing: border-box;
+            height: 100vh;
+            width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 18px;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .app-wrapper::-webkit-scrollbar {
+            display: none;
+            width: 0;
+        }
+        
+        .no-drag, form, button, input, select, label, .sys-close, .slider, .tt-icon, p {
+            -webkit-app-region: no-drag;
+        }
+        
+        ::-webkit-scrollbar {
+            display: none;
+            width: 0;
+        }
+
+        .hdr {
+            -webkit-app-region: drag;
+            position: relative;
+            margin-bottom: 6px;
+        }
+        
+        .hdr * {
+            -webkit-app-region: no-drag;
+        }
+
+        .sys-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.15s ease;
+        }
+        
+        .sys-close:hover {
+            color: var(--bad);
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .fgrid label {
+            white-space: normal;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* switch (wow really sherlock?) */
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #2a2a2a; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); transition: .2s; }
+        .slider:before { position: absolute; content: ""; height: 10px; width: 10px; left: 3px; bottom: 3px; background-color: #888; border-radius: 50%; transition: .2s; }
+        input:checked + .slider { background-color: rgba(59, 106, 234, 0.15); border-color: rgba(59, 106, 234, 0.3); }
+        input:checked + .slider:before { transform: translateX(16px); background-color: var(--good); }
+
+        .tt-icon { display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; border-radius: 50%; background: #2a2a2a; color: #888; font-size: 10px; cursor: help; margin-left: 6px; position: relative; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); }
+        .tt-icon[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 130%; left: 0; transform: translateX(-20%); padding: 6px 8px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #ccc; font-size: 0.72rem; white-space: normal; width: 160px; text-align: left; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.5); pointer-events: none; }
+
+        /* ud flow state */
+        .flow-step { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .flow-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .step-title { font-size: 0.85rem; color: #eee; margin-bottom: 10px; display: flex; align-items: center; font-weight: 500; }
+    </style>
+</head>
+
+<body>
+    <div class="app-wrapper">
+    <div class="stack" style="min-height: 100%;">
+        <div class="hdr no-select" style="display: flex; align-items: flex-start; justify-content: space-between;">
+            <div>
+                <div style="display: flex; align-items: center; margin-bottom: 2px;">
+                    <!-- ud image name -->
+                    <img src="../assets/rblxswap_logo no bg.png" style="width: 22px; height: 22px; margin-right: 8px;" alt="Logo" class="no-drag">
+                    <p style="font-weight: 500; font-size: 1rem; color: #fff; margin: 0;">RblxSwap</p>
+                </div>
+                <div class="notice">
+                    <p>Made with love by @focat</p>
+                </div>
+            </div>
+            <svg class="sys-close" onclick="window.close()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+
+        <div id="cleanerDiv" class="fade-in">
+            <form target="_blank" action="" onsubmit="return false">
+                <div class="fgrid">
+                    <label>Roblox Cache</label>
+                    <div class="frow">
+                        <span class="hint" style="color:#888;">Purges registry traces, temporary game files, and launcher caches entirely. This allows you to get onto a new account with minimal evidence to link to your previous account.</span>
+                    </div>
+                </div>
+                
+                <div class="fgrid" style="margin-top: 12px; background: rgba(236, 59, 71, 0.05); border: 1px solid rgba(236, 59, 71, 0.1); border-radius: 6px; padding: 10px;">
+                    <label style="color: var(--bad); font-size: 0.8rem;">Note</label>
+                    <div class="frow">
+                        <span class="hint" style="color:#aaa; font-size: 0.75rem;">Because we don't deliberately don't touch your web browser, <b>you must manually clear your cookies for Roblox.com</b> before logging into an alt account.</span>
+                    </div>
+                </div>
+
+                <div class="fbtns" style="margin-top: 20px;">
+                    <button id="btnCleanRun" type="button" onclick="run_cleaner();" style="border-color: rgba(59, 106, 234, 0.3); color: var(--good);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        Clean Traces
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="loaderForm" class="fade-in" style="display:none;">
+            <form target="_blank" action="" onsubmit="return false" style="display:flex; flex-direction:column; align-items:center; padding: 24px;">
+                <svg viewBox="0 0 50 50" style="width:28px;height:28px;animation:spin 1s linear infinite;margin-bottom:12px;">
+                    <circle id="loaderRing" cx="25" cy="25" r="20" fill="none" stroke="var(--good)" stroke-width="4" stroke-dasharray="31.4 100" stroke-linecap="round"></circle>
+                </svg>
+                <div style="font-weight:500; font-size:0.9rem; color:#d4d4d4;" id="loaderTitle">Initializing Sequence...</div>
+                
+                <div id="loaderLogs" style="width:100%; border-top:1px solid rgba(255,255,255,0.05); margin-top:14px; padding-top:10px; display:flex; flex-direction:column; gap:6px; font-family: inherit; font-size:0.75rem; color:#888;">
+                </div>
+            </form>
+        </div>
+
+        <div id="postCleanDiv" class="fade-in" style="display:none;">
+            <form target="_blank" action="" onsubmit="return false">
+                <div style="text-align:center; padding: 10px 0;">
+                    <p style="color:var(--good); font-size: 0.95rem; font-weight: 500; margin:0 0 6px;">Sweep Complete!</p>
+                    <p style="font-size:0.83rem; color:#aaa; margin:0 0 16px;">Would you like to spoof your MAC address(es) for extra safety? This may break your network connection, so only proceed if you are confident.</p>
+                </div>
+                <div class="fbtns">
+                    <button type="button" onclick="window.close();">
+                        No, Close App
+                    </button>
+                    <button type="button" onclick="show_mac_panel();" style="border-color: rgba(59, 106, 234, 0.3); color: var(--good);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+                        Yes, Spoof
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="revertConfirmDiv" class="fade-in" style="display:none;">
+            <form target="_blank" action="" onsubmit="return false">
+                <div style="text-align:center; padding: 10px 0;">
+                    <p style="color:var(--bad); font-size: 0.95rem; font-weight: 500; margin:0 0 8px;">Restore Spoofed Addresses?</p>
+                    <p style="font-size:0.83rem; color:#aaa; margin:0 0 16px; line-height: 1.4;">This will erase all spoofed network addresses and restore your original physical hardware addresses. Are you sure you want to proceed?</p>
+                </div>
+                <div class="fbtns">
+                    <button type="button" onclick="show_mac_panel();">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="execute_rev_mac();" style="border-color: rgba(236, 59, 71, 0.2); color: var(--bad);">
+                        Yes, Erase
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="macDiv" class="fade-in" style="display: none;">
+            <form target="_blank" action="" onsubmit="return false">
+                
+                <div class="flow-step">
+                    <div class="step-title">Which adapter do we spoof?</div>
+                    <div class="drop" style="width:100%; margin-bottom: 8px;">
+                        <select id="selAdapter" style="width: 100%; max-width: 100%; font-size: 0.8rem;"></select>
+                    </div>
+                    <p style="font-size: 0.72rem; color: #888; margin: 0 0 14px 0;">Hint: Your main internet adapter usually has "Wi-Fi" or "Ethernet" in its name.</p>
+                    
+                    <div class="frow" style="justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
+                        <label for="chkAllAdapters" style="margin:0; font-size:0.8rem; color:#aaa; cursor:pointer;">Spoof All Adapters Instead</label>
+                        <label class="switch">
+                            <input type="checkbox" id="chkAllAdapters">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-title">What should be the new spoofed MAC?</div>
+                    <div class="frow" style="margin-bottom: 14px;">
+                        <input id="inpMac" type="text" maxlength="17" placeholder="XX-XX-XX-XX-XX-XX" style="flex:1; font-family: monospace;">
+                        <button type="button" title="Shuffle MAC" onclick="rnd_mac()" style="padding: 6px; flex:none; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="frow" style="justify-content: space-between; align-items: center;">
+                        <label style="margin:0; font-size:0.8rem; color:#aaa; display:flex; align-items:center;">
+                            OUI Mirror Mode
+                            <span class="tt-icon" data-tooltip="Keeps the first 3 bytes the same to match your real hardware's brand.">?</span>
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="chkMirror" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-title">DHCP (advanced)</div>
+                    <div class="frow" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <label style="margin:0; font-size:0.8rem; color:#aaa; display:flex; align-items:center;">
+                            DHCP Refresh
+                            <span class="tt-icon" data-tooltip="Gets a new local IP from your router. Disconnects you for ~5 seconds.">?</span>
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="chkDhcp" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="usage" style="padding: 10px 12px; line-height: 1.4;">
+                        <p class="u-title" style="color: var(--bad);">Warning: Potential Softblock</p>
+                        <p class="u-note">Spamming refresh can cause your ISP to softly block your device temporarily! Only do this when necessary. <br><span style="color:#aaa;">Tip: If you want to be overkill, you can rename your PC's host name in settings as you can be identified via hostname.</span></p>
+                    </div>
+                </div>
+
+                <div class="fbtns" style="margin-top:12px;">
+                    <button type="button" onclick="rev_mac();" style="border-color: rgba(236, 59, 71, 0.2); color: var(--bad);">
+                        Revert
+                    </button>
+                    <button type="button" onclick="run_spoof();" style="border-color: rgba(59, 106, 234, 0.3); color: var(--good);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        Apply Spoof
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const rblx_sys = window.launcher; 
+        
+        const ui_panels = {
+            cleaner: document.getElementById('cleanerDiv'),
+            loader: document.getElementById('loaderForm'),
+            postclean: document.getElementById('postCleanDiv'),
+            revert_confirm: document.getElementById('revertConfirmDiv'),
+            mac: document.getElementById('macDiv')
+        };
+
+        function show_panel(key) {
+            Object.values(ui_panels).forEach(p => p.style.display = 'none');
+            ui_panels[key].style.display = 'block';
+        }
+
+        let is_sweeping = false;
+
+        async function run_cleaner() {
+            if(is_sweeping || !rblx_sys) return;
+            is_sweeping = true;
+            
+            show_panel('loader');
+            document.getElementById('loaderLogs').innerHTML = '';
+            document.getElementById('loaderTitle').innerText = 'Initializing Sequence...';
+            document.getElementById('loaderTitle').style.color = '#d4d4d4';
+            document.getElementById('loaderRing').setAttribute('stroke', 'var(--good)');
+            
+            await rblx_sys.runBypass();
+        }
+
+        // ipc events
+        if (rblx_sys) {
+            rblx_sys.onLog(d => {
+                const log_box = document.getElementById('loaderLogs');
+                
+                let col = '#666';
+                if (d.level === 'error') col = 'var(--bad)';
+                if (d.level === 'success') col = 'var(--good)';
+                
+                const log_line = document.createElement('div');
+                log_line.style.color = col;
+                
+                log_line.innerText = "> " + d.message;
+                
+                log_box.appendChild(log_line);
+                if(log_box.children.length > 6) {
+                    log_box.removeChild(log_box.firstChild);
+                }
+            });
+
+            rblx_sys.onStatus(d => {
+                if(d.status) {
+                    document.getElementById('loaderTitle').innerText = d.status;
+                }
+            });
+
+            rblx_sys.onComplete(d => {
+                is_sweeping = false;
+                const ring = document.getElementById('loaderRing');
+                if (d.success !== false) {
+                    ring.setAttribute('stroke', 'var(--good)');
+                    setTimeout(() => show_panel('postclean'), 800);
+                } else {
+                    ring.setAttribute('stroke', 'var(--bad)');
+                    document.getElementById('loaderTitle').style.color = 'var(--bad)';
+                    const log_box = document.getElementById('loaderLogs');
+                    log_box.innerHTML += '<div style="color:var(--bad); margin-top:8px;">Execution Failed. Please restart.</div>';
+                }
+            });
+        }
+
+        let hw_list = [];
+        let hw_target = null;
+
+        function show_mac_panel() {
+            show_panel('mac');
+            fetch_hardware();
+        }
+
+        async function fetch_hardware() {
+            if (!rblx_sys) return;
+            hw_list = await rblx_sys.getAdapters();
+            if (!hw_target && hw_list.length > 0) hw_target = hw_list[0].Name;
+            
+            const drop_sel = document.getElementById('selAdapter');
+            drop_sel.innerHTML = '';
+            
+            hw_list.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.Name;
+                opt.textContent = a.InterfaceDescription || a.Name;
+                if(a.Name === hw_target) opt.selected = true;
+                drop_sel.appendChild(opt);
+            });
+            
+            const focus = hw_list.find(x => x.Name === hw_target);
+            if(focus && !document.getElementById('inpMac').value) {
+                document.getElementById('inpMac').value = focus.MacAddress;
+            }
+        }
+
+        // adapter change detect
+        document.getElementById('selAdapter').addEventListener('change', (e) => {
+            hw_target = e.target.value;
+            const updated = hw_list.find(x => x.Name === hw_target);
+            if(updated) {
+                document.getElementById('inpMac').value = updated.MacAddress;
+            }
+        });
+
+        // all adapters toggle lock
+        document.getElementById('chkAllAdapters').addEventListener('change', (e) => {
+            const is_all = e.target.checked;
+            document.getElementById('inpMac').disabled = is_all;
+            document.getElementById('selAdapter').disabled = is_all;
+            document.getElementById('inpMac').style.opacity = is_all ? '0.5' : '1';
+            document.getElementById('selAdapter').style.opacity = is_all ? '0.5' : '1';
+        });
+
+        function rnd_mac() {
+            const trg = hw_list.find(x => x.Name === hw_target);
+            const is_mirror = document.getElementById('chkMirror').checked;
+            const l_bit = ['2','6','A','E'];
+            let build = "";
+            
+            if(is_mirror && trg && trg.MacAddress && trg.MacAddress.length === 17) {
+                // match 3 bytes for OUI but enforce Locally Administered Bit on the 2nd char so wireless drivers accept it
+                build = trg.MacAddress[0] + l_bit[Math.floor(Math.random()*4)] + trg.MacAddress.substring(2, 9);
+            } else {
+                // generic windows byte rule
+                const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
+                build = hx() + l_bit[Math.floor(Math.random()*4)] + "-" + hx()+hx() + "-" + hx()+hx() + "-";
+            }
+            
+            const hx_gen = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
+            const tail = hx_gen()+hx_gen() + "-" + hx_gen()+hx_gen() + "-" + hx_gen()+hx_gen();
+            
+            document.getElementById('inpMac').value = build + tail;
+        }
+
+        function mac_log(msg, col) {
+            const log_box = document.getElementById('loaderLogs');
+            const log_line = document.createElement('div');
+            log_line.style.color = col || '#888';
+            log_line.innerText = "> " + msg;
+            log_box.appendChild(log_line);
+            if(log_box.children.length > 7) {
+                log_box.removeChild(log_box.firstChild);
+            }
+        }
+
+        async function run_spoof() {
+            const mac_target = document.getElementById('inpMac').value;
+            const run_dhcp = document.getElementById('chkDhcp').checked;
+            const spoof_all = document.getElementById('chkAllAdapters').checked;
+            
+            show_panel('loader');
+            document.getElementById('loaderTitle').innerText = 'Spoofing...';
+            document.getElementById('loaderTitle').style.color = '#d4d4d4';
+            document.getElementById('loaderRing').setAttribute('stroke', 'var(--good)');
+            document.getElementById('loaderLogs').innerHTML = '';
+
+            let err_count = 0;
+            
+            if (spoof_all) {
+                let count = 0;
+                const l_bit_arr = ['2','6','A','E'];
+                for (let h of hw_list) {
+                    if (!h.InterfaceDescription) continue;
+                    
+                    let build = "02-00-00-";
+                    if (h.MacAddress && h.MacAddress.length === 17) {
+                        // ensure 2nd char enforces Locally Administered Bit for wireless drivers
+                        build = h.MacAddress[0] + l_bit_arr[Math.floor(Math.random()*4)] + h.MacAddress.substring(2, 9);
+                    }
+                    
+                    const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
+                    const tail = hx()+hx() + "-" + hx()+hx() + "-" + hx()+hx();
+                    
+                    mac_log(`Spoofing ${h.Name}...`, '#888');
+                    const res = await rblx_sys.spoofMac(h.InterfaceDescription, build + tail);
+                    await rblx_sys.restartAdapter(h.Name);
+                    
+                    if (res) { mac_log(`Success: ${h.Name}`, 'var(--good)'); count++; }
+                    else { mac_log(`Failed: ${h.Name}`, 'var(--bad)'); err_count++; }
+                }
+                mac_log(`Applied to ${count} adapters.`, '#ccc');
+            } else {
+                const trg = hw_list.find(x => x.Name === hw_target);
+                if (trg) {
+                    mac_log(`Spoofing ${trg.Name}...`, '#888');
+                    const res = await rblx_sys.spoofMac(trg.InterfaceDescription, mac_target);
+                    await rblx_sys.restartAdapter(trg.Name);
+                    
+                    if (res) mac_log('Successfully spoofed MAC.', 'var(--good)');
+                    else { mac_log('Failed to spoof MAC. (Run as Admin?)', 'var(--bad)'); err_count++; }
+                }
+            }
+            
+            if(run_dhcp) {
+                mac_log('Refreshing DHCP/IP...', '#888');
+                const d_res = await rblx_sys.dhcpRefresh();
+                if(d_res) mac_log('DHCP leases renewed.', 'var(--good)');
+                else { mac_log('DHCP timeout/failed.', 'var(--bad)'); err_count++; }
+            }
+            
+            await fetch_hardware();
+            
+            if (err_count > 0) {
+                document.getElementById('loaderRing').setAttribute('stroke', 'var(--bad)');
+                document.getElementById('loaderTitle').style.color = 'var(--bad)';
+                document.getElementById('loaderTitle').innerText = 'Completed with Errors';
+                document.getElementById('loaderLogs').innerHTML += `<button onclick="show_mac_panel()" style="margin-top:12px; padding:6px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#ccc; border-radius:4px; outline:none; cursor:pointer;">Acknowledge & Return</button>`;
+            } else {
+                document.getElementById('loaderTitle').innerText = 'Spoof Complete!';
+                setTimeout(() => show_mac_panel(), 2000);
+            }
+        }
+
+        function rev_mac() {
+            show_panel('revert_confirm');
+        }
+
+        async function execute_rev_mac() {
+            const spoof_all = document.getElementById('chkAllAdapters').checked;
+            
+            show_panel('loader');
+            document.getElementById('loaderTitle').innerText = 'Reverting spoof...';
+            document.getElementById('loaderTitle').style.color = '#d4d4d4';
+            document.getElementById('loaderRing').setAttribute('stroke', 'var(--good)');
+            document.getElementById('loaderLogs').innerHTML = '';
+
+            let err_count = 0;
+            
+            if (spoof_all) {
+                for (let h of hw_list) {
+                    if (!h.InterfaceDescription) continue;
+                    mac_log(`Reverting ${h.Name}...`, '#888');
+                    const res = await rblx_sys.resetMac(h.InterfaceDescription);
+                    await rblx_sys.restartAdapter(h.Name);
+                    if (res) mac_log(`Restored: ${h.Name}`, 'var(--good)');
+                    else { mac_log(`Failed: ${h.Name}`, 'var(--bad)'); err_count++; }
+                }
+            } else {
+                const trg = hw_list.find(x => x.Name === hw_target);
+                if(trg) {
+                    mac_log(`Reverting ${trg.Name}...`, '#888');
+                    const res = await rblx_sys.resetMac(trg.InterfaceDescription);
+                    await rblx_sys.restartAdapter(trg.Name);
+                    if (res) mac_log('Modifications erased.', 'var(--good)');
+                    else { mac_log('Failed to erase modifications.', 'var(--bad)'); err_count++; }
+                }
+            }
+            
+            await fetch_hardware();
+            
+            if (err_count > 0) {
+                document.getElementById('loaderRing').setAttribute('stroke', 'var(--bad)');
+                document.getElementById('loaderTitle').style.color = 'var(--bad)';
+                document.getElementById('loaderTitle').innerText = 'Completed with Errors';
+                document.getElementById('loaderLogs').innerHTML += `<button onclick="show_mac_panel()" style="margin-top:12px; padding:6px; background:transparent; border:1px solid rgba(255,255,255,0.1); color:#ccc; border-radius:4px; outline:none; cursor:pointer;">Acknowledge & Return</button>`;
+            } else {
+                document.getElementById('loaderTitle').innerText = 'Revert Complete!';
+                setTimeout(() => show_mac_panel(), 2000);
+            }
+        }
+    </script>
+</body>
+</html>
