@@ -572,8 +572,8 @@ ipcMain.handle('mac:spoof', async (e, adapterDesc, newMac) => {
 	//* but the description is consistent and unchangeable 
 	//* (at least without modifying driver files which is a whole other level of pain!)
 	const script = `
-		$adapters = Get-ItemProperty "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}\\0*" -ErrorAction SilentlyContinue | Where-Object { $_.DriverDesc -eq '${adapterDesc.replace(/'/g, "''")}' }
-		if ($adapters) {
+		$adapters = @(Get-ItemProperty "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}\\0*" -ErrorAction SilentlyContinue | Where-Object { $_.DriverDesc -eq '${adapterDesc.replace(/'/g, "''")}' })
+		if ($adapters.Count -gt 0) {
 				$path = $adapters[0].PSPath
 				Set-ItemProperty -Path $path -Name "NetworkAddress" -Value "${newMac.replace(/-/g, '')}" -ErrorAction Stop
 
@@ -596,8 +596,8 @@ ipcMain.handle('mac:spoof', async (e, adapterDesc, newMac) => {
 
 ipcMain.handle('mac:reset', async (e, adapterDesc) => {
 	const script = `
-		$adapters = Get-ItemProperty "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}\\0*" -ErrorAction SilentlyContinue | Where-Object { $_.DriverDesc -eq '${adapterDesc.replace(/'/g, "''")}' }
-		if ($adapters) {
+		$adapters = @(Get-ItemProperty "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}\\0*" -ErrorAction SilentlyContinue | Where-Object { $_.DriverDesc -eq '${adapterDesc.replace(/'/g, "''")}' })
+		if ($adapters.Count -gt 0) {
 				$path = $adapters[0].PSPath
 				Remove-ItemProperty -Path $path -Name "NetworkAddress" -ErrorAction SilentlyContinue
 				Write-Output "SUCCESS"
@@ -616,8 +616,9 @@ ipcMain.handle('mac:reset', async (e, adapterDesc) => {
 ipcMain.handle('mac:restart-adapter', async (e, adapterName) => {
 	// disables/enables adapter to apply changes
 	const script = `
-		Disable-NetAdapter -Name '${adapterName.replace(/'/g, "''")}' -Confirm:$false -ErrorAction Continue
-		Enable-NetAdapter -Name '${adapterName.replace(/'/g, "''")}' -Confirm:$false -ErrorAction Continue
+		Disable-NetAdapter -Name '${adapterName.replace(/'/g, "''")}' -Confirm:$false -ErrorAction SilentlyContinue
+		Start-Sleep -Seconds 2
+		Enable-NetAdapter -Name '${adapterName.replace(/'/g, "''")}' -Confirm:$false -ErrorAction SilentlyContinue
 		Write-Output "SUCCESS"
 	`;
 	try {

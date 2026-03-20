@@ -795,19 +795,32 @@
         function rnd_mac() { 
             const trg = hw_list.find(x => x.Name === hw_target);
             const is_mirror = document.getElementById('chkMirror')?.checked;
+            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
             const l_bit = ['2','6','A','E'];
             let build = "";
+
+            //-- is wireless?
+            const str = ((trg?.Name || '') + ' ' + (trg?.InterfaceDescription || '')).toLowerCase();
+            const is_wireless = str.includes('wi-fi') || str.includes('wireless') || str.includes('wlan') || str.includes('802.11');
             
             if(is_mirror && trg && trg.MacAddress && trg.MacAddress.length === 17) {
-                build = trg.MacAddress[0] + l_bit[Math.floor(Math.random()*4)] + trg.MacAddress.substring(2, 9);
+                //! for wireless, must ensure 'locally administered bit' is set (02)
+                //! why? because TMAC said so.
+                if (is_wireless) {
+                    build = '02' + trg.MacAddress.substring(2, 9) + '-' + h()+h() + '-' + h()+h() + '-';
+                } else {
+                    //! for ethernet, we can apply standard LAA logic with any prefix
+                    build = h() + l_bit[Math.floor(Math.random()*4)] + trg.MacAddress.substring(2, 9) + '-' + h()+h() + '-' + h()+h() + '-';
+                }
             } else {
-                const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-                build = hx() + l_bit[Math.floor(Math.random()*4)] + '-' + hx()+hx() + '-' + hx()+hx() + '-';
+                if (is_wireless) {
+                    build = '02-' + h()+h() + '-' + h()+h() + '-' + h()+h() + '-';
+                } else {
+                    build = h() + l_bit[Math.floor(Math.random()*4)] + '-' + h()+h() + '-' + h()+h() + '-' + h()+h() + '-';
+                }
             }
             
-            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
             const tail = h()+h() + "-" + h()+h() + "-" + h()+h();
-            
             document.getElementById('inpMac').value = build + tail;
         }
 
@@ -836,7 +849,7 @@
                 let currentNewMac = isSimple ? generate_simple_mac(t) : document.getElementById('inpMac').value;
                 mlog(`Spoofing [${t.Name}] to ${currentNewMac}...`, '#aaa');
                 try {
-                    const res = await s.spoofMac(t.DriverDesc || '', currentNewMac);
+                    const res = await s.spoofMac(t.InterfaceDescription || '', currentNewMac);
                     if(res) {
                         mlog('Restarting adapter...', '#aaa');
                         await s.restartAdapter(t.Name);
@@ -862,15 +875,27 @@
         }
 
         function generate_simple_mac(adapter) {
+            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
             const l_bit = ['2','6','A','E'];
+            
+            // Check if adapter is wireless based on Name or Description
+            const str = ((adapter?.Name || '') + ' ' + (adapter?.InterfaceDescription || '')).toLowerCase();
+            const is_wireless = str.includes('wi-fi') || str.includes('wireless') || str.includes('wlan') || str.includes('802.11');
+
             let build = "";
             if(adapter && adapter.MacAddress && adapter.MacAddress.length === 17) {
-                build = adapter.MacAddress[0] + l_bit[Math.floor(Math.random()*4)] + adapter.MacAddress.substring(2, 9);
+                if (is_wireless) {
+                    build = '02' + adapter.MacAddress.substring(2, 9) + '-' + h()+h() + '-' + h()+h() + '-';
+                } else {
+                    build = h() + l_bit[Math.floor(Math.random()*4)] + adapter.MacAddress.substring(2, 9) + '-' + h()+h() + '-' + h()+h() + '-';
+                }
             } else {
-                const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-                build = hx() + l_bit[Math.floor(Math.random()*4)] + '-' + hx()+hx() + '-' + hx()+hx() + '-';
+                if (is_wireless) {
+                    build = '02-' + h()+h() + '-' + h()+h() + '-' + h()+h() + '-';
+                } else {
+                    build = h() + l_bit[Math.floor(Math.random()*4)] + '-' + h()+h() + '-' + h()+h() + '-' + h()+h() + '-';
+                }
             }
-            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
             return build + h()+h() + "-" + h()+h() + "-" + h()+h();
         }
 
@@ -892,7 +917,7 @@
             for(const t of targets) {
                 mlog(`Reverting [${t.Name}]...`, '#aaa');
                 try {
-                    const res = await s.resetMac(t.DriverDesc || '');
+                    const res = await s.resetMac(t.InterfaceDescription || '');
                     if(res) {
                         mlog('Restarting adapter...', '#aaa');
                         await s.restartAdapter(t.Name);
@@ -948,7 +973,7 @@
             
             for(const t of all_hw) {
                 try {
-                    const res = await s.resetMac(t.DriverDesc || '');
+                    const res = await s.resetMac(t.InterfaceDescription || '');
                     if(res) {
                         await s.restartAdapter(t.Name);
                     } else {
