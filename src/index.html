@@ -203,6 +203,13 @@
         .theme-picker input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; }
         .theme-picker span { font-family: monospace; font-size: 0.75rem; color: var(--text-main); width: 60px; text-transform: uppercase;}
         
+        /* confirmation modal */
+        .confirm-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); -webkit-app-region: no-drag; }
+        .confirm-modal > div { background: var(--bg-accent); padding: 24px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5); text-align: center; max-width: 280px; }
+        .confirm-modal h2 { margin: 0 0 12px 0; font-size: 1.05rem; color: var(--text-main); }
+        .confirm-modal p { margin: 0 0 16px 0; font-size: 0.8rem; color: var(--text-dim); }
+        .confirm-modal button { margin: 0 4px; padding: 8px 16px; font-size: 0.75rem; }
+        
         /* lil easter egg :DDD */
         @keyframes bao-fall {
             0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
@@ -232,12 +239,23 @@
         </div>
     </div>
 
+    <div id="confirmModal" class="confirm-modal">
+        <div>
+            <h2 id="confirmTitle">Confirm Action</h2>
+            <p id="confirmMsg">Are you sure?</p>
+            <div style="display:flex; justify-content:center; gap:8px;">
+                <button type="button" style="padding:6px 12px; font-size:0.75rem;" onclick="close_confirm()">Cancel</button>
+                <button type="button" class="btn-danger" style="padding:6px 12px; font-size:0.75rem; background:rgba(248, 113, 113, 0.1); border:1px solid transparent;" onclick="execute_confirm()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <div class="app-wrapper">
         <div id="tooltip">Tooltip</div>
 
         <div class="hdr">
             <div class="logo-area" onclick="trigger_bao_confetti()" style="cursor:crosshair;" data-tooltip=":bao:">
-                <img src="../assets/rblxswap_logo no bg.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <img src="../assets/rblxswap_logo_no_bg.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
                 <span class="logo-text">RblxSwap</span>
             </div>
             <div class="ctrls">
@@ -268,7 +286,7 @@
                 </div>
 
                 <div style="margin-top: 16px;">
-                    <a id="home_revert_btn" onclick="revert_all_macs_home()" style="color: var(--bad); font-size: 0.75rem; text-decoration: underline; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" data-tooltip="If you haven't spoofed your MAC(s) yet, you don't need to revert this.">Revert spoofed MACs</a>
+                    <a id="home_revert_btn" onclick="revert_all_macs_home_confirmed()" style="color: var(--bad); font-size: 0.75rem; text-decoration: underline; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" data-tooltip="If you haven't spoofed your MAC(s) yet, you don't need to revert this.">Revert spoofed MACs</a>
                 </div>
             </div>
 
@@ -285,6 +303,7 @@
             <div id="view_post" class="view">
                 <h1 style="color: var(--good);">Sweep Complete!</h1>
                 <p style="padding: 0 20px;">Would you like to spoof your MAC address(es) for extra safety? This may disrupt network temporarily.</p>
+                <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 12px;">Tip: Remember to clear your roblox.com cookies too!</p>
                 
                 <div style="display:flex; justify-content:center; gap: 10px;">
                     <button onclick="hide_self()">No, Hide</button>
@@ -395,6 +414,41 @@
                 </div>
 
                 <div class="fgrid">
+                    <label>Behavior</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <label style="margin:0; font-size:0.75rem; color:#aaa;">Close Button Minimizes Window</label>
+                        <label class="switch">
+                            <input type="checkbox" id="chkMinimizeClose">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="fgrid">
+                    <label>Preserve Settings</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Keeps your in-game settings">
+                            In-Game Settings (Volume, etc.)
+                            <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="chkPreserveSettings">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Keeps launcher fastflag customizations">
+                            FastFlags (FFlags)
+                            <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="chkPreserveFastflags">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="fgrid">
                     <label>Updates</label>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:0.8rem; color:#aaa;" id="updStatus">Checking...</span>
@@ -424,8 +478,8 @@
                     <div class="fgrid" style="padding:12px; margin-bottom: 6px;">
                         <label>Spoofed MAC</label>
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                            <input type="text" id="inpMac" placeholder="XX-XX-XX-XX-XX-XX" maxlength="17" style="font-family:monospace; text-align:center; flex:1;">
-                            <button type="button" style="padding:6px 10px; font-size:0.75rem;" onclick="rnd_mac()" data-tooltip="Shuffle MAC">
+                            <input type="text" id="inpMac" placeholder="XX-XX-XX-XX-XX-XX" maxlength="17" style="font-family:monospace; text-align:center; flex:1;" data-tooltip="This is your original MAC! Click the shuffle button to change it." onchange="check_mac_tooltip()">
+                            <button type="button" style="padding:6px 10px; font-size:0.75rem;" onclick="rnd_mac(); update_mac_tooltip()" data-tooltip="Shuffle MAC">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20L21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
                             </button>
                         </div>
@@ -617,6 +671,9 @@
         function load_settings_ui() {
             document.querySelector(`input[name="setType"][value="${c_config.launcherType || 'default'}"]`).checked = true;
             document.querySelector(`input[name="spoofMode"][value="${c_config.spoofMode || 'simple'}"]`).checked = true;
+            document.getElementById('chkMinimizeClose').checked = c_config.minimizeClose || false;
+            document.getElementById('chkPreserveSettings').checked = c_config.preserveSettings || false;
+            document.getElementById('chkPreserveFastflags').checked = c_config.preserveFastflags || false;
             toggle_set_weao();
             toggle_spoof_mode();
             if(c_config.weblauncherDir) {
@@ -660,6 +717,9 @@
         async function save_settings() {
             c_config.launcherType = document.querySelector('input[name="setType"]:checked').value;
             c_config.spoofMode = document.querySelector('input[name="spoofMode"]:checked')?.value || 'simple';
+            c_config.minimizeClose = document.getElementById('chkMinimizeClose').checked;
+            c_config.preserveSettings = document.getElementById('chkPreserveSettings').checked;
+            c_config.preserveFastflags = document.getElementById('chkPreserveFastflags').checked;
             
             if(c_config.launcherType === 'weao' && !c_config.weblauncherDir) {
                 alert("Please select your WEAO Web Launcher directory.");
@@ -935,33 +995,74 @@
             }
         }
 
-        async function revert_all_macs_home() {
-            if(!s) return;
-            const btn = document.getElementById('home_revert_btn');
-            const ogText = btn.innerText;
-            btn.innerText = "Reverting...";
-            btn.style.pointerEvents = "none";
-            
-            await fetch_hardware();
-            let all_hw = hw_list;
-            let err_count = 0;
-            
-            for(const t of all_hw) {
-                try {
-                    const res = await s.resetMac(t.InterfaceDescription || '');
-                    if(res) {
-                        await s.restartAdapter(t.Name);
-                    } else {
-                        err_count++;
-                    }
-                } catch(e) { err_count++; }
+        let pendingConfirmAction = null;
+        
+        function show_confirm(title, msg, callback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMsg').innerText = msg;
+            pendingConfirmAction = callback;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        
+        function close_confirm() {
+            document.getElementById('confirmModal').style.display = 'none';
+            pendingConfirmAction = null;
+        }
+        
+        function execute_confirm() {
+            if(pendingConfirmAction) {
+                pendingConfirmAction();
             }
-            
-            btn.innerText = err_count > 0 ? "Reverted (w/ errors)" : "Reverted successfully!";
-            setTimeout(() => { 
-                btn.innerText = ogText; 
-                btn.style.pointerEvents = "auto";
-            }, 3000);
+            close_confirm();
+        }
+        
+        function revert_all_macs_home_confirmed() {
+            show_confirm('Revert spoofed MACs?', 'This will reset all network adapters to their original MAC addresses.', async () => {
+                if(!s) return;
+                const btn = document.getElementById('home_revert_btn');
+                const ogText = btn.innerText;
+                btn.innerText = "Reverting...";
+                btn.style.pointerEvents = "none";
+                
+                await fetch_hardware();
+                let all_hw = hw_list;
+                let err_count = 0;
+                
+                for(const t of all_hw) {
+                    try {
+                        const res = await s.resetMac(t.InterfaceDescription || '');
+                        if(res) {
+                            await s.restartAdapter(t.Name);
+                        } else {
+                            err_count++;
+                        }
+                    } catch(e) { err_count++; }
+                }
+                
+                btn.innerText = err_count > 0 ? "Reverted (w/ errors)" : "Reverted successfully!";
+                setTimeout(() => { 
+                    btn.innerText = ogText; 
+                    btn.style.pointerEvents = "auto";
+                }, 3000);
+            });
+        }
+        
+        function check_mac_tooltip() {
+            if(is_all_adapters) return;
+            const inp = document.getElementById('inpMac');
+            if(hw_target && hw_list.length > 0) {
+                const original = hw_list.find(x => x.Name === hw_target)?.MacAddress;
+                const current = inp.value;
+                if(original !== current) {
+                    inp.removeAttribute('data-tooltip');
+                }
+            }
+        }
+        
+        function update_mac_tooltip() {
+            if(!is_all_adapters) {
+                document.getElementById('inpMac').removeAttribute('data-tooltip');
+            }
         }
 
         init();
