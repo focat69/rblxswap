@@ -1,228 +1,14 @@
-<!-- got so used to tailwind that most styles are inline :sob: -->
+<!-- styles are no longer inline cause seven is a contributor -->
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RblxSwap</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-base: #101010;
-            --bg-accent: #191919;
-            --bg-darker: #0c0c0c;
-            --text-main: #f0f0f0;
-            --text-dim: #888888;
-            --accent: #ffffff;
-            --border: rgba(255, 255, 255, 0.06);
-            --good: #4ade80;
-            --bad: #f87171;
-            --sys-hover: rgba(255,255,255,0.05);
-            font-family: 'Poppins', sans-serif;
-        }
-
-        html { background: transparent !important; }
-        body {
-            user-select: none;
-            margin: 0;
-            height: 100vh;
-            width: 100vw;
-            background: var(--bg-base);
-            -webkit-app-region: drag;
-            overflow: hidden;
-        }
-
-        /* to make interactive elements clickable!!!!! (dumb) */
-        button, input, select, label, .radio-opt, p, h1, span {
-            -webkit-app-region: no-drag;
-        }
-        
-        ::-webkit-scrollbar { display: none; width: 0; }
-        
-        .app-wrapper {
-            position: relative;
-            background-color: transparent;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            box-sizing: border-box;
-            height: 100vh;
-            width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            scrollbar-width: none;
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
-            -webkit-app-region: no-drag;
-        }
-
-        #bg-img-layer {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-size: cover; background-position: center;
-            opacity: 0.15; z-index: 1; pointer-events: none;
-        }
-
-        .app-wrapper::before {
-            content: '';
-            position: fixed;
-            inset: -50%;
-            width: 200%;
-            height: 200%;
-            background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
-            background-size: 22px 22px;
-            transform: rotate(15deg);
-            pointer-events: none;
-            z-index: 0;
-            display: var(--grid-display, block);
-        }
-
-        /* header (idk why i named it so weird) */
-        .hdr {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 22px;
-            -webkit-app-region: drag;
-            height: 30px;
-            z-index: 10;
-        }
-        .hdr * { -webkit-app-region: no-drag; }
-        
-        .logo-area { display: flex; align-items: center; gap: 10px; }
-        .logo-img { width: 24px; height: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); border-radius:4px; opacity:0.9;}
-        .logo-text { font-weight: 600; font-size: 1.05rem; letter-spacing: 0.2px; }
-
-        .ctrls { display: flex; align-items: center; gap: 8px; }
-        .sys-btn {
-            display: inline-flex; justify-content: center; align-items: center;
-            width: 28px; height: 28px; border-radius: 50%;
-            color: var(--text-dim); cursor: pointer; transition: all 0.15s;
-            background: var(--bg-base);
-        }
-        .sys-btn:hover { background: var(--sys-hover); color: var(--text-main); }
-        .sys-btn.close:hover { color: var(--bad); }
-
-        /* views = pages :P */
-        .view-stack {
-            position: relative; flex: 1; padding: 0 30px;
-            display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-            text-align: center;
-            z-index: 10;
-        }
-        .view { display: none; width: 100%; animation: fadeUp 0.3s ease forwards; }
-        .view.active { display: block; }
-        
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 10px 0; }
-        p { font-size: 0.85rem; color: var(--text-dim); margin: 0 0 20px 0; line-height: 1.5; }
-
-        button {
-            background: var(--bg-accent); border: 1px solid var(--border);
-            color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 500;
-            padding: 10px 24px; border-radius: 20px; cursor: pointer;
-            transition: all 0.2s ease; display: inline-flex; justify-content: center; align-items: center; gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        button:hover { background: #222; border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
-        button:active { transform: translateY(1px); }
-        button.btn-primary { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
-        button.btn-primary:hover { background: rgba(255,255,255,0.15); }
-        button.btn-danger { color: var(--bad); }
-
-        .footer {
-            padding: 14px 22px; display: flex; justify-content: space-between; align-items: flex-end;
-            font-size: 0.75rem; color: var(--text-dim); height: 20px;
-            z-index: 10;
-        }
-        .badge {
-            background: var(--bg-accent); padding: 4px 10px; border-radius: 12px;
-            border: 1px solid var(--border); font-weight: 500; cursor: default;
-            transition: all 0.2s ease;
-        }
-        .status-badge { opacity: 0.6; font-style: italic; }
-
-        #tooltip {
-            position: fixed; pointer-events: none; opacity: 0; z-index: 1000;
-            background: #2a2a2a; color: #eee; font-size: 0.75rem; font-weight: 500;
-            padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-family: inherit;
-            transition: opacity 0.15s ease, transform 0.1s linear; transform: translate(-50%, 10px);
-        }
-
-        #updateModal {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.7); z-index: 9999;
-            display: none; justify-content: center; align-items: center;
-            backdrop-filter: blur(4px); -webkit-app-region: no-drag;
-        }
-        #updateModal > div {
-            background: var(--bg-accent); padding: 24px; border-radius: 16px;
-            border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            text-align: center; max-width: 300px; animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        input[type="text"], select {
-            background: var(--bg-darker); border: 1px solid var(--border);
-            color: var(--text-main); font-family: inherit; font-size: 0.8rem;
-            padding: 8px 12px; border-radius: 8px; width: 100%; box-sizing: border-box; outline: none;
-        }
-        input[type="text"]:focus, select:focus { border-color: rgba(255,255,255,0.2); }
-
-        .fgrid { text-align: left; background: var(--bg-accent); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
-        .fgrid label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
-
-        /* for loading anim */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        /* switch toggle */
-        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-darker); border-radius: 18px; border: 1px solid var(--border); transition: .2s; }
-        .slider:before { position: absolute; content: ""; height: 10px; width: 10px; left: 3px; bottom: 3px; background-color: var(--text-dim); border-radius: 50%; transition: .2s; }
-        input:checked + .slider { background-color: rgba(255,255,255, 0.15); border-color: rgba(255,255,255, 0.3); }
-        input:checked + .slider:before { transform: translateX(16px); background-color: var(--good); }
-
-        .radio-opt { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px; font-size: 0.85rem; color: #ccc;}
-        .radio-opt input { accent-color: var(--text-main); }
-        
-        .theme-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
-        .theme-row:last-child { border-bottom: none; }
-        .theme-row p { margin: 0; }
-        .theme-label { font-size: 0.85rem; font-weight: 500; color: var(--text-main); }
-        .theme-desc { font-size: 0.7rem; color: var(--text-dim); }
-        .theme-picker { display: flex; align-items: center; gap: 8px; background: var(--bg-darker); padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); }
-        .theme-picker input[type="color"] { width: 24px; height: 24px; padding: 0; border: none; border-radius: 4px; background: var(--bg-base); cursor: pointer; }
-        .theme-picker input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        .theme-picker input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; }
-        .theme-picker span { font-family: monospace; font-size: 0.75rem; color: var(--text-main); width: 60px; text-transform: uppercase;}
-        
-        /* confirmation modal */
-        .confirm-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); -webkit-app-region: no-drag; }
-        .confirm-modal > div { background: var(--bg-accent); padding: 24px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5); text-align: center; max-width: 280px; }
-        .confirm-modal h2 { margin: 0 0 12px 0; font-size: 1.05rem; color: var(--text-main); }
-        .confirm-modal p { margin: 0 0 16px 0; font-size: 0.8rem; color: var(--text-dim); }
-        .confirm-modal button { margin: 0 4px; padding: 8px 16px; font-size: 0.75rem; }
-        
-        /* lil easter egg :DDD */
-        @keyframes bao-fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-        .bao-confetti {
-            position: fixed;
-            top: -50px;
-            pointer-events: none;
-            z-index: 9999;
-            animation: bao-fall 2s linear forwards;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -232,9 +18,13 @@
             <h1 style="color:var(--text-main); font-size:1.1rem; margin-bottom:8px;">Update Available</h1>
             <p id="updModalDesc" style="font-size:0.8rem; margin-bottom:16px;"></p>
             <div style="display:flex; justify-content:center; gap:8px;">
-                <button type="button" style="padding:6px 12px; font-size:0.75rem;" onclick="ignore_update()">Ignore</button>
-                <button type="button" style="padding:6px 12px; font-size:0.75rem;" onclick="document.getElementById('updateModal').style.display='none'">Later</button>
-                <button type="button" class="btn-primary" style="padding:6px 12px; font-size:0.75rem; background:var(--good); color:#000; border:none;" onclick="download_update()">Download</button>
+                <button type="button" style="padding:6px 12px; font-size:0.75rem;"
+                    onclick="ignore_update()">Ignore</button>
+                <button type="button" style="padding:6px 12px; font-size:0.75rem;"
+                    onclick="document.getElementById('updateModal').style.display='none'">Later</button>
+                <button type="button" class="btn-primary"
+                    style="padding:6px 12px; font-size:0.75rem; background:var(--good); color:#000; border:none;"
+                    onclick="download_update()">Download</button>
             </div>
         </div>
     </div>
@@ -244,8 +34,11 @@
             <h2 id="confirmTitle">Confirm Action</h2>
             <p id="confirmMsg">Are you sure?</p>
             <div style="display:flex; justify-content:center; gap:8px;">
-                <button type="button" style="padding:6px 12px; font-size:0.75rem;" onclick="close_confirm()">Cancel</button>
-                <button type="button" class="btn-danger" style="padding:6px 12px; font-size:0.75rem; background:rgba(248, 113, 113, 0.1); border:1px solid transparent;" onclick="execute_confirm()">Confirm</button>
+                <button type="button" style="padding:6px 12px; font-size:0.75rem;"
+                    onclick="close_confirm()">Cancel</button>
+                <button type="button" class="btn-danger"
+                    style="padding:6px 12px; font-size:0.75rem; background:rgba(248, 113, 113, 0.1); border:1px solid transparent;"
+                    onclick="execute_confirm()">Confirm</button>
             </div>
         </div>
     </div>
@@ -255,15 +48,25 @@
 
         <div class="hdr">
             <div class="logo-area" onclick="trigger_bao_confetti()" style="cursor:crosshair;" data-tooltip=":bao:">
-                <img src="../assets/rblxswap_logo_no_bg.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <img src="../assets/rblxswap_logo_no_bg.png" alt="Logo" class="logo-img"
+                    onerror="this.style.display='none'">
                 <span class="logo-text">RblxSwap</span>
             </div>
             <div class="ctrls">
                 <div class="sys-btn" data-tooltip="Settings" onclick="show_view('settings')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
                 </div>
                 <div class="sys-btn close" data-tooltip="Close" onclick="hide_self()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                 </div>
             </div>
         </div>
@@ -272,28 +75,48 @@
             <!-- home -->
             <div id="view_home" class="view active">
                 <h1 id="home_title">Ready to swap?</h1>
-                <p id="home_desc">Clean out traces and caches safely to log into another account without linking prior sessions.</p>
-                
+                <p id="home_desc">Clean out traces and caches safely to log into another account without linking prior
+                    sessions.</p>
+
                 <div style="display:flex; justify-content:center; gap: 8px;">
                     <button class="btn-primary" onclick="start_clean()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
                         Clean Traces
                     </button>
                     <button onclick="show_view('mac')">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
                         Spoof MAC
                     </button>
                 </div>
 
                 <div style="margin-top: 16px;">
-                    <a id="home_revert_btn" onclick="revert_all_macs_home_confirmed()" style="color: var(--bad); font-size: 0.75rem; text-decoration: underline; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" data-tooltip="If you haven't spoofed your MAC(s) yet, you don't need to revert this.">Revert spoofed MACs</a>
+                    <a id="home_revert_btn" onclick="revert_all_macs_home_confirmed()"
+                        style="color: var(--bad); font-size: 0.75rem; text-decoration: underline; cursor: pointer; transition: opacity 0.2s;"
+                        onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"
+                        data-tooltip="If you haven't spoofed your MAC(s) yet, you don't need to revert this.">Revert
+                        spoofed MACs</a>
                 </div>
             </div>
 
             <!-- loader -->
             <div id="view_loader" class="view">
-                <svg viewBox="0 0 50 50" style="width:36px;height:36px;animation:spin 1s linear infinite;margin: 0 auto 16px auto;">
-                    <circle id="loaderRing" cx="25" cy="25" r="20" fill="none" stroke="var(--text-main)" stroke-width="3" stroke-dasharray="31.4 100" stroke-linecap="round"></circle>
+                <svg viewBox="0 0 50 50"
+                    style="width:36px;height:36px;animation:spin 1s linear infinite;margin: 0 auto 16px auto;">
+                    <circle id="loaderRing" cx="25" cy="25" r="20" fill="none" stroke="var(--text-main)"
+                        stroke-width="3" stroke-dasharray="31.4 100" stroke-linecap="round"></circle>
                 </svg>
                 <h1 id="loaderTitle" style="font-size:1rem;font-weight:500;">Initializing 1337...</h1>
                 <p id="loaderDesc" style="font-size:0.75rem;margin-top:4px;">Leet opsec...</p>
@@ -302,9 +125,11 @@
             <!-- after/post clean -->
             <div id="view_post" class="view">
                 <h1 style="color: var(--good);">Sweep Complete!</h1>
-                <p style="padding: 0 20px;">Would you like to spoof your MAC address(es) for extra safety? This may disrupt network temporarily.</p>
-                <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 12px;">Tip: Remember to clear your roblox.com cookies too!</p>
-                
+                <p style="padding: 0 20px;">Would you like to spoof your MAC address(es) for extra safety? This may
+                    disrupt network temporarily.</p>
+                <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 12px;">Tip: Remember to clear your
+                    roblox.com cookies too!</p>
+
                 <div style="display:flex; justify-content:center; gap: 10px;">
                     <button onclick="hide_self()">No, Hide</button>
                     <button class="btn-primary" onclick="show_view('mac')">Yes, Spoof</button>
@@ -312,91 +137,101 @@
             </div>
 
             <!-- settings -->
-            <div id="view_settings" class="view" style="max-height: 250px; overflow-y:auto; -webkit-app-region: no-drag;">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; width:100%; text-align:left;">
+            <div id="view_settings" class="view"
+                style="max-height: 250px; overflow-y:auto; -webkit-app-region: no-drag;">
+                <div
+                    style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; width:100%; text-align:left;">
                     <h1 style="margin:0; font-size:1rem;">Settings</h1>
                     <button style="padding: 6px 12px; font-size: 0.75rem;" onclick="save_settings()">Done</button>
                 </div>
-                
+
                 <div class="fgrid">
                     <label>Launcher Type</label>
-                    <label class="radio-opt"><input type="radio" name="setType" value="default" onchange="toggle_set_weao()"> Default / Other</label>
-                    <label class="radio-opt"><input type="radio" name="setType" value="weao" onchange="toggle_set_weao()"> WEAO RDD</label>
-                    
-                    <div id="setWeaoOpt" style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);">
-                        <p style="font-size: 0.47rem; color:#888; margin-bottom:6px; word-break:break-all; text-align: left;" id="txtSetWeao">Folder: Not selected</p>
+                    <label class="radio-opt"><input type="radio" name="setType" value="default"
+                            onchange="toggle_set_weao()"> Default / Other</label>
+                    <label class="radio-opt"><input type="radio" name="setType" value="weao"
+                            onchange="toggle_set_weao()"> WEAO RDD</label>
+
+                    <div id="setWeaoOpt"
+                        style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);">
+                        <p style="font-size: 0.47rem; color:#888; margin-bottom:6px; word-break:break-all; text-align: left;"
+                            id="txtSetWeao">Folder: Not selected</p>
                         <div style="display:flex; gap:6px;">
-                            <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="scan_set()">Auto Scan</button>
-                            <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="browse_set()">Browse Folder</button>
+                            <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="scan_set()">Auto
+                                Scan</button>
+                            <button type="button" style="padding:4px 8px; font-size:0.7rem;"
+                                onclick="browse_set()">Browse Folder</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="fgrid">
                     <label>Spoofing Mode</label>
-                    <label class="radio-opt"><input type="radio" name="spoofMode" value="simple" onchange="toggle_spoof_mode()"> Simple <span style="font-size:0.6rem; color:#888;">(Auto-Spoof All)</span></label>
-                    <label class="radio-opt"><input type="radio" name="spoofMode" value="advanced" onchange="toggle_spoof_mode()"> Advanced <span style="font-size:0.6rem; color:#888;">(Custom Mac, DHCP)</span></label>
+                    <label class="radio-opt"><input type="radio" name="spoofMode" value="simple"
+                            onchange="toggle_spoof_mode()"> Simple <span
+                            style="font-size:0.6rem; color:#888;">(Auto-Spoof All)</span></label>
+                    <label class="radio-opt"><input type="radio" name="spoofMode" value="advanced"
+                            onchange="toggle_spoof_mode()"> Advanced <span style="font-size:0.6rem; color:#888;">(Custom
+                            Mac, DHCP)</span></label>
                 </div>
 
                 <div class="fgrid">
                     <label>Themes</label>
                     <div class="theme-row">
-                        <div>
-                            <p class="theme-label">Background Base</p>
-                        </div>
-                        <div class="theme-picker">
-                            <input type="color" data-tk="bg-base" onchange="apply_theme(this)">
+                        <div><p class="theme-label">Background Base</p></div>
+                        <div class="theme-picker" data-tk="bg-base" onclick="open_color_picker(this)">
+                            <div class="color-swatch"></div>
                             <span class="hexTxt">#101010</span>
                         </div>
                     </div>
                     <div class="theme-row">
-                        <div>
-                            <p class="theme-label">Background Accent</p>
-                        </div>
-                        <div class="theme-picker">
-                            <input type="color" data-tk="bg-accent" onchange="apply_theme(this)">
+                        <div><p class="theme-label">Background Accent</p></div>
+                        <div class="theme-picker" data-tk="bg-accent" onclick="open_color_picker(this)">
+                            <div class="color-swatch"></div>
                             <span class="hexTxt">#191919</span>
                         </div>
                     </div>
                     <div class="theme-row">
-                        <div>
-                            <p class="theme-label">Text Color</p>
-                        </div>
-                        <div class="theme-picker">
-                            <input type="color" data-tk="text-main" onchange="apply_theme(this)">
+                        <div><p class="theme-label">Text Color</p></div>
+                        <div class="theme-picker" data-tk="text-main" onclick="open_color_picker(this)">
+                            <div class="color-swatch"></div>
                             <span class="hexTxt">#f0f0f0</span>
                         </div>
                     </div>
                     <div class="theme-row">
-                        <div>
-                            <p class="theme-label">Success Accent (Good)</p>
-                        </div>
-                        <div class="theme-picker">
-                            <input type="color" data-tk="good" onchange="apply_theme(this)">
+                        <div><p class="theme-label">Success Accent (Good)</p></div>
+                        <div class="theme-picker" data-tk="good" onclick="open_color_picker(this)">
+                            <div class="color-swatch"></div>
                             <span class="hexTxt">#4ade80</span>
                         </div>
                     </div>
                     <div class="theme-row">
-                        <div>
-                            <p class="theme-label">Error Accent (Bad)</p>
-                        </div>
-                        <div class="theme-picker">
-                            <input type="color" data-tk="bad" onchange="apply_theme(this)">
+                        <div><p class="theme-label">Error Accent (Bad)</p></div>
+                        <div class="theme-picker" data-tk="bad" onclick="open_color_picker(this)">
+                            <div class="color-swatch"></div>
                             <span class="hexTxt">#f87171</span>
                         </div>
                     </div>
                     <div class="theme-row" style="margin-top:8px; padding-top:8px;">
                         <div style="flex:1;">
-                            <p class="theme-label" style="display:flex; justify-content:space-between; align-items:center;">
-                                Background Image 
-                                <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="document.getElementById('bgImgFile').click()">Choose File...</button>
+                            <p class="theme-label"
+                                style="display:flex; justify-content:space-between; align-items:center;">
+                                Background Image
+                                <button type="button" style="padding:4px 8px; font-size:0.7rem;"
+                                    onclick="document.getElementById('bgImgFile').click()">Choose File...</button>
                             </p>
-                            <input type="file" id="bgImgFile" accept="image/*" style="display:none;" onchange="handle_bg_file(this)">
+                            <input type="file" id="bgImgFile" accept="image/*" style="display:none;"
+                                onchange="handle_bg_file(this)">
                             <input type="hidden" data-tk="bg-img" id="bgImgHidden">
-                            
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-                                <p id="bgImgName" style="font-size:0.7rem; color:var(--text-dim); margin:0; word-break:break-all; padding-right:8px;">No file selected</p>
-                                <button type="button" id="bgImgClear" style="display:none; padding:4px 8px; font-size:0.7rem; background:rgba(248, 113, 113, 0.1); border:1px solid transparent; color:var(--bad);" onclick="clear_bg_file()">Remove</button>
+
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                <p id="bgImgName"
+                                    style="font-size:0.7rem; color:var(--text-dim); margin:0; word-break:break-all; padding-right:8px;">
+                                    No file selected</p>
+                                <button type="button" id="bgImgClear"
+                                    style="display:none; padding:4px 8px; font-size:0.7rem; background:rgba(248, 113, 113, 0.1); border:1px solid transparent; color:var(--bad);"
+                                    onclick="clear_bg_file()">Remove</button>
                             </div>
                         </div>
                     </div>
@@ -405,11 +240,16 @@
                             <p class="theme-label">Hide Grid Overlay</p>
                         </div>
                         <div>
-                            <input type="checkbox" data-tk="hide-grid" onchange="apply_theme(this)" style="transform: scale(1.2);">
+                            <label class="custom-check-wrap">
+                                <input type="checkbox" class="custom-check" data-tk="hide-grid" onchange="apply_theme(this)">
+                                <span class="custom-check"></span>
+                            </label>
                         </div>
                     </div>
                     <div style="margin-top: 12px; display:flex; justify-content:center;">
-                        <button type="button" class="btn-danger" style="font-size: 0.7rem; padding: 6px 12px; border-color:transparent; background: rgba(248, 113, 113, 0.1);" onclick="reset_theme()">Restore Defaults</button>
+                        <button type="button" class="btn-danger"
+                            style="font-size: 0.7rem; padding: 6px 12px; border-color:transparent; background: rgba(248, 113, 113, 0.1);"
+                            onclick="reset_theme()">Restore Defaults</button>
                     </div>
                 </div>
 
@@ -427,9 +267,12 @@
                 <div class="fgrid">
                     <label>Preserve Settings</label>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Keeps your in-game settings">
+                        <label
+                            style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;"
+                            data-tooltip="Keeps your in-game settings">
                             In-Game Settings (Volume, etc.)
-                            <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                            <span class="tt-icon"
+                                style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
                         </label>
                         <label class="switch">
                             <input type="checkbox" id="chkPreserveSettings">
@@ -437,9 +280,12 @@
                         </label>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Keeps launcher fastflag customizations">
+                        <label
+                            style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;"
+                            data-tooltip="Keeps launcher fastflag customizations">
                             FastFlags (FFlags)
-                            <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                            <span class="tt-icon"
+                                style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
                         </label>
                         <label class="switch">
                             <input type="checkbox" id="chkPreserveFastflags">
@@ -452,7 +298,8 @@
                     <label>Updates</label>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:0.8rem; color:#aaa;" id="updStatus">Checking...</span>
-                        <button type="button" style="padding:4px 8px; font-size:0.7rem;" onclick="check_upd_manual()">Check Now</button>
+                        <button type="button" style="padding:4px 8px; font-size:0.7rem;"
+                            onclick="check_upd_manual()">Check Now</button>
                     </div>
                 </div>
             </div>
@@ -460,7 +307,8 @@
             <!-- mac -->
             <div id="view_mac" class="view" style="max-height: 250px; overflow-y:auto; -webkit-app-region: no-drag;">
                 <div id="mac_advanced_ui">
-                    <p style="font-size:0.75rem; color:#888; margin-bottom:12px;">These are advanced options. If you don't know what these do, it's safer to choose "Simple MAC" in Settings.</p>
+                    <p style="font-size:0.75rem; color:#888; margin-bottom:12px;">These are advanced options. If you
+                        don't know what these do, it's safer to choose "Simple MAC" in Settings.</p>
                     <div class="fgrid" style="padding:12px; margin-bottom: 6px;">
                         <label>Adapter</label>
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
@@ -474,31 +322,50 @@
                             </label>
                         </div>
                     </div>
-                    
+
                     <div class="fgrid" style="padding:12px; margin-bottom: 6px;">
                         <label>Spoofed MAC</label>
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                            <input type="text" id="inpMac" placeholder="XX-XX-XX-XX-XX-XX" maxlength="17" style="font-family:monospace; text-align:center; flex:1;" data-tooltip="This is your original MAC! Click the shuffle button to change it." onchange="check_mac_tooltip()">
-                            <button type="button" style="padding:6px 10px; font-size:0.75rem;" onclick="rnd_mac(); update_mac_tooltip()" data-tooltip="Shuffle MAC">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20L21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
+                            <input type="text" id="inpMac" placeholder="XX-XX-XX-XX-XX-XX" maxlength="17"
+                                style="font-family:monospace; text-align:center; flex:1;"
+                                data-tooltip="This is your original MAC! Click the shuffle button to change it."
+                                onchange="check_mac_tooltip()">
+                            <button type="button" style="padding:6px 10px; font-size:0.75rem;"
+                                onclick="rnd_mac(); update_mac_tooltip()" data-tooltip="Shuffle MAC">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M16 3h5v5"></path>
+                                    <path d="M4 20L21 3"></path>
+                                    <path d="M21 16v5h-5"></path>
+                                    <path d="M15 15l6 6"></path>
+                                    <path d="M4 4l5 5"></path>
+                                </svg>
                             </button>
                         </div>
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Keeps the first 3 bytes the same to match your real hardware's brand.">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <label
+                                style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;"
+                                data-tooltip="Keeps the first 3 bytes the same to match your real hardware's brand.">
                                 OUI Mirror Mode
-                                <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                                <span class="tt-icon"
+                                    style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
                             </label>
                             <label class="switch">
                                 <input type="checkbox" id="chkMirror" checked>
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        
+
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;" data-tooltip="Gets a new local IP from your router. Disconnects you for ~5 seconds. Warning: Softblock risk if spammed.">
+                            <label
+                                style="margin:0; font-size:0.75rem; color:#aaa; display:flex; align-items:center; gap:4px;"
+                                data-tooltip="Gets a new local IP from your router. Disconnects you for ~5 seconds. Warning: Softblock risk if spammed.">
                                 DHCP Refresh
-                                <span class="tt-icon" style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
+                                <span class="tt-icon"
+                                    style="display:inline-block; border:1px solid #555; border-radius:50%; width:12px; height:12px; text-align:center; line-height:12px; font-size:9px; cursor:help;">?</span>
                             </label>
                             <label class="switch">
                                 <input type="checkbox" id="chkDhcp" checked>
@@ -508,18 +375,24 @@
                     </div>
                 </div>
 
-                <div id="mac_simple_ui" style="display:none; text-align:center; margin-bottom: 12px; background:var(--bg-accent); padding:20px; border-radius:12px; border:1px solid var(--border);">
+                <div id="mac_simple_ui"
+                    style="display:none; text-align:center; margin-bottom: 12px; background:var(--bg-accent); padding:20px; border-radius:12px; border:1px solid var(--border);">
                     <h1 style="font-size:1.1rem; margin-bottom:4px;">Simple MAC</h1>
-                    <p style="font-size:0.75rem; margin-bottom:0;">Easy version which uses OUI & spoofs all adapters. (you may enable advanced options in Settings!)</p>
+                    <p style="font-size:0.75rem; margin-bottom:0;">Easy version which uses OUI & spoofs all adapters.
+                        (you may enable advanced options in Settings!)</p>
                 </div>
-                
-                <div id="macLogs" style="background:#0c0c0c; border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:8px; height:50px; overflow-y:auto; scrollbar-width:none; font-size:0.7rem; text-align:left; color:#888; margin-bottom:12px;">
+
+                <div id="macLogs"
+                    style="background:#0c0c0c; border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:8px; height:50px; overflow-y:auto; scrollbar-width:none; font-size:0.7rem; text-align:left; color:#888; margin-bottom:12px;">
                     Waiting to spoof...
                 </div>
 
                 <div style="display:flex; justify-content:center; gap:8px;">
-                    <button class="btn-danger" style="padding:8px 16px; font-size:0.75rem; background:rgba(248, 113, 113, 0.1); border-color:transparent;" onclick="rev_mac()">Revert</button>
-                    <button class="btn-primary" style="padding:8px 16px; font-size:0.75rem;" onclick="run_spoof()">Spoof</button>
+                    <button class="btn-danger"
+                        style="padding:8px 16px; font-size:0.75rem; background:rgba(248, 113, 113, 0.1); border-color:transparent;"
+                        onclick="rev_mac()">Revert</button>
+                    <button class="btn-primary" style="padding:8px 16px; font-size:0.75rem;"
+                        onclick="run_spoof()">Spoof</button>
                     <button style="padding:8px 16px; font-size:0.75rem;" onclick="show_view('home')">Cancel</button>
                 </div>
             </div>
@@ -527,545 +400,29 @@
 
         <!-- footer (durrrr) -->
         <div class="footer">
-            <div class="badge" id="vBadge" onclick="check_upd_manual()" style="cursor:pointer;" data-tooltip="Check for updates">vX.X.X</div>
+            <div class="badge" id="vBadge" onclick="check_upd_manual()" style="cursor:pointer;"
+                data-tooltip="Check for updates">vX.X.X</div>
             <div class="badge status-badge" id="botStatus">Waiting...</div>
         </div>
     </div>
 
-    <script>
-        const s = window.launcher;
-        let c_config = { launcherType: 'default', weblauncherDir: null, theme: null, ignoredUpdate: null };
-        let cur_ver = '';
-        let upd_url = '';
-        let upd_ver = '';
+    <!-- amazing colorpicker -->
+    <div id="colorPickr" style="display:none;">
+        <canvas id="cpCanvas" width="200" height="150"></canvas>
+        <div id="cpCvnCrsr"></div>
+        <div class="cp-hue-wrap">
+            <div id="cpHueTrack">
+                <div id="cpHueThmb"></div>
+            </div>
+        </div>
+        <div class="cp-hex-row">
+            <span class="cp-hash">#</span>
+            <input type="text" id="cpHexInp" maxlength="6" spellcheck="false">
+            <div id="cpPreview"></div>
+        </div>
+    </div>
 
-        function show_view(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view_' + id).classList.add('active');
-            
-            if(id === 'settings') load_settings_ui();
-            if(id === 'mac') fetch_hardware();
-        }
-        function hide_self() {
-            if(s) s.hideWindow();
-            show_view('home');
-        }
-
-        const default_theme = { 'bg-base': '#101010', 'bg-accent': '#191919', 'text-main': '#f0f0f0', 'good': '#4ade80', 'bad': '#f87171', 'bg-img': '', 'hide-grid': false };
-        
-        function apply_theme_var(key, val) {
-            if(key === 'bg-img') {
-                document.getElementById('bg-img-layer').style.backgroundImage = val ? `url('${val}')` : 'none';
-            } else if(key === 'hide-grid') {
-                document.documentElement.style.setProperty('--grid-display', val ? 'none' : 'block');
-            } else {
-                document.documentElement.style.setProperty('--' + key, val);
-            }
-
-            const inp = document.querySelector(`input[data-tk="${key}"]`);
-            if(inp) {
-                if(inp.type === 'checkbox') {
-                    inp.checked = (val === true || val === 'true');
-                } else {
-                    inp.value = val;
-                    if(inp.nextElementSibling && inp.nextElementSibling.classList.contains('hexTxt')) {
-                        inp.nextElementSibling.innerText = val;
-                    }
-                }
-            }
-
-            if(key === 'bg-img') {
-                const nameEl = document.getElementById('bgImgName');
-                const clearEl = document.getElementById('bgImgClear');
-                if(val) {
-                    nameEl.innerText = val.split('/').pop().split('\\').pop();
-                    if(clearEl) clearEl.style.display = 'inline-flex';
-                } else {
-                    nameEl.innerText = 'No file selected';
-                    if(clearEl) clearEl.style.display = 'none';
-                }
-            }
-        }
-
-        function apply_theme(input) {
-            const key = input.getAttribute('data-tk');
-            const val = input.type === 'checkbox' ? input.checked : input.value;
-            apply_theme_var(key, val);
-            
-            if(!c_config.theme) c_config.theme = { ...default_theme };
-            c_config.theme[key] = val;
-            if(s) s.setConfig(c_config);
-        }
-
-        function reset_theme() {
-            c_config.theme = { ...default_theme };
-            Object.keys(c_config.theme).forEach(k => apply_theme_var(k, c_config.theme[k]));
-            if(s) s.setConfig(c_config);
-        }
-
-        function handle_bg_file(input) {
-            if(input.files && input.files[0]) {
-                const path = "file:///" + input.files[0].path.replace(/\\/g, '/');
-                document.getElementById('bgImgHidden').value = path;
-                const pathParts = input.files[0].path.split(/[\\/]/);
-                document.getElementById('bgImgName').innerText = pathParts[pathParts.length - 1];
-                document.getElementById('bgImgClear').style.display = 'inline-flex';
-                apply_theme(document.getElementById('bgImgHidden'));
-            }
-        }
-
-        function clear_bg_file() {
-            document.getElementById('bgImgFile').value = '';
-            document.getElementById('bgImgHidden').value = '';
-            document.getElementById('bgImgName').innerText = 'No file selected';
-            document.getElementById('bgImgClear').style.display = 'none';
-            apply_theme(document.getElementById('bgImgHidden'));
-        }
-
-        async function init() {
-
-            if(!s) return;
-
-            c_config = await s.getConfig();
-            cur_ver = await s.getVersion();
-            document.getElementById('vBadge').innerText = cur_ver;
-
-            if(!c_config.theme) c_config.theme = { ...default_theme };
-            
-            Object.keys(default_theme).forEach(k => { if(c_config.theme[k] === undefined) c_config.theme[k] = default_theme[k]; });
-            Object.keys(c_config.theme).forEach(k => apply_theme_var(k, c_config.theme[k]));
-
-            //-- updates
-            const up = await s.checkUpdates();
-            if(up.updateAvailable) {
-                upd_url = up.url;
-                upd_ver = up.version;
-                document.getElementById('updStatus').innerHTML = '<span style="color:var(--good); cursor:pointer;" onclick="s.openExternal(\''+up.url+'\')">Download ' + up.version + '</span>';
-
-                document.getElementById('vBadge').style.cursor = 'pointer';
-                document.getElementById('vBadge').style.borderColor = 'var(--good)';
-                document.getElementById('vBadge').style.color = 'var(--text-main)';
-                document.getElementById('vBadge').style.background = 'rgba(74, 222, 128, 0.2)';
-                
-                //-- if not ingored, then we show
-                if(c_config.ignoredUpdate !== up.version) {
-                    document.getElementById('updModalDesc').innerHTML = `Version <b>${up.version}</b> is available!`;
-                    document.getElementById('updateModal').style.display = 'flex';
-                }
-            } else {
-                document.getElementById('updStatus').innerText = 'Up to date!';
-            }
-        }
-
-        async function ignore_update() {
-            c_config.ignoredUpdate = upd_ver;
-            if(s) await s.setConfig(c_config);
-            document.getElementById('updateModal').style.display = 'none';
-        }
-
-        function download_update() {
-            if(s && upd_url) s.openExternal(upd_url);
-            document.getElementById('updateModal').style.display = 'none';
-        }
-
-        function load_settings_ui() {
-            document.querySelector(`input[name="setType"][value="${c_config.launcherType || 'default'}"]`).checked = true;
-            document.querySelector(`input[name="spoofMode"][value="${c_config.spoofMode || 'simple'}"]`).checked = true;
-            document.getElementById('chkMinimizeClose').checked = c_config.minimizeClose || false;
-            document.getElementById('chkPreserveSettings').checked = c_config.preserveSettings || false;
-            document.getElementById('chkPreserveFastflags').checked = c_config.preserveFastflags || false;
-            toggle_set_weao();
-            toggle_spoof_mode();
-            if(c_config.weblauncherDir) {
-                document.getElementById('txtSetWeao').innerText = c_config.weblauncherDir;
-            }
-            if(c_config.theme) {
-                Object.keys(c_config.theme).forEach(k => apply_theme_var(k, c_config.theme[k]));
-            }
-        }
-
-        function toggle_set_weao() {
-            const isWeao = document.querySelector('input[name="setType"]:checked').value === 'weao';
-            document.getElementById('setWeaoOpt').style.display = isWeao ? 'block' : 'none';
-        }
-
-        function toggle_spoof_mode() {
-            const isSimple = document.querySelector('input[name="spoofMode"]:checked')?.value === 'simple';
-            document.getElementById('mac_advanced_ui').style.display = isSimple ? 'none' : 'block';
-            document.getElementById('mac_simple_ui').style.display = isSimple ? 'block' : 'none';
-        }
-
-        async function scan_set() {
-            document.getElementById('txtSetWeao').innerText = 'Scanning...';
-            const res = await s.scanWeblauncher();
-            if(res) {
-                c_config.weblauncherDir = res;
-                document.getElementById('txtSetWeao').innerText = res;
-            } else {
-                document.getElementById('txtSetWeao').innerText = 'Not found. Please Browse.';
-            }
-        }
-
-        async function browse_set() {
-            const res = await s.selectDir();
-            if(res) {
-                c_config.weblauncherDir = res;
-                document.getElementById('txtSetWeao').innerText = res;
-            }
-        }
-
-        async function save_settings() {
-            c_config.launcherType = document.querySelector('input[name="setType"]:checked').value;
-            c_config.spoofMode = document.querySelector('input[name="spoofMode"]:checked')?.value || 'simple';
-            c_config.minimizeClose = document.getElementById('chkMinimizeClose').checked;
-            c_config.preserveSettings = document.getElementById('chkPreserveSettings').checked;
-            c_config.preserveFastflags = document.getElementById('chkPreserveFastflags').checked;
-            
-            if(c_config.launcherType === 'weao' && !c_config.weblauncherDir) {
-                alert("Please select your WEAO Web Launcher directory.");
-                return;
-            }
-            if(c_config.launcherType !== 'weao') c_config.weblauncherDir = null;
-
-            await s.setConfig(c_config);
-            show_view('home');
-        }
-
-        async function check_upd_manual() {
-            const btn = document.getElementById('vBadge');
-            const originalText = btn.innerText;
-            btn.innerText = 'Checking...';
-            document.getElementById('updStatus').innerText = 'Checking...';
-
-            const up = await s.checkUpdates();
-            if(up.updateAvailable) {
-                document.getElementById('updStatus').innerHTML = `<span style="color:var(--good); cursor:pointer;" onclick="s.openExternal('${up.url}')">Download ${up.version}</span>`;
-                btn.innerText = 'Update Available!';
-                btn.style.borderColor = 'var(--good)';
-                btn.style.color = 'var(--text-main)';
-                btn.style.background = 'rgba(74, 222, 128, 0.2)';
-            } else {
-                document.getElementById('updStatus').innerText = 'Up to date!';
-                btn.innerText = 'Up to date!';
-                setTimeout(() => {
-                    if (btn.innerText === 'Up to date!') btn.innerText = originalText;
-                }, 2000);
-            }
-        }
-
-        let is_sweeping = false;
-        async function start_clean() {
-            if(is_sweeping || !s) return;
-            
-            if(c_config.launcherType === 'weao' && !c_config.weblauncherDir) {
-                show_view('settings');
-                alert("WEAO selected but no path found. Configure it first!");
-                return;
-            }
-
-            is_sweeping = true;
-            show_view('loader');
-            document.getElementById('botStatus').innerText = 'Working...';
-            document.getElementById('loaderTitle').innerText = 'Initializing...';
-            document.getElementById('loaderTitle').style.color = '#fff';
-            document.getElementById('loaderRing').setAttribute('stroke', 'var(--text-main)');
-            
-            await s.runBypass(c_config.weblauncherDir);
-        }
-
-        if(s) {
-            s.onLog(d => {
-                document.getElementById('loaderDesc').innerText = d.message;
-            });
-            s.onStatus(d => {
-                if(d.status) document.getElementById('loaderTitle').innerText = d.status.charAt(0).toUpperCase() + d.status.slice(1);
-            });
-            s.onComplete(d => {
-                is_sweeping = false;
-                if(d.success !== false) {
-                    document.getElementById('botStatus').innerText = 'Cleaned';
-                    setTimeout(() => show_view('post'), 600);
-                } else {
-                    document.getElementById('loaderTitle').style.color = 'var(--bad)';
-                    document.getElementById('loaderTitle').innerText = 'Failed';
-                    document.getElementById('loaderRing').setAttribute('stroke', 'var(--bad)');
-                    document.getElementById('botStatus').innerText = 'Error';
-                    setTimeout(() => show_view('home'), 3000);
-                }
-            });
-        }
-
-        const tip = document.getElementById('tooltip');
-        document.querySelectorAll('[data-tooltip]').forEach(el => {
-            el.addEventListener('mousemove', e => {
-                tip.innerText = el.getAttribute('data-tooltip');
-                tip.style.opacity = '1';
-                
-                let x = e.clientX;
-                let y = e.clientY + 20;
-                
-                const tw = tip.offsetWidth || 150;
-                const th = tip.offsetHeight || 30;
-                
-                if (x + (tw / 2) > window.innerWidth - 10) x = window.innerWidth - (tw / 2) - 10;
-                if (x - (tw / 2) < 10) x = (tw / 2) + 10;
-                if (y + th > window.innerHeight - 10) y = e.clientY - th - 5;
-                
-                tip.style.left = x + 'px';
-                tip.style.top = y + 'px';
-            });
-            el.addEventListener('mouseleave', () => tip.style.opacity = '0');
-            el.addEventListener('mousedown', () => tip.style.opacity = '0');
-        });
-
-        let hw_list = [], hw_target = null;
-        let is_all_adapters = false;
-        
-        async function fetch_hardware() { 
-            if(!s) return; 
-            hw_list = await s.getAdapters(); 
-            const sb = document.getElementById('selAdapter'); 
-            sb.innerHTML = ''; 
-            hw_list.forEach(a => {
-                const o = document.createElement('option'); 
-                o.value = a.Name; 
-                o.textContent = a.InterfaceDescription; 
-                sb.appendChild(o);
-            }); 
-            if(hw_list.length > 0) {
-                hw_target = hw_list[0].Name; 
-                document.getElementById('inpMac').value = hw_list[0].MacAddress;
-            } 
-        }
-
-        function toggle_all_adapters() {
-            is_all_adapters = document.getElementById('chkAllAdapters').checked;
-            document.getElementById('selAdapter').style.opacity = is_all_adapters ? '0.5' : '1';
-            document.getElementById('inpMac').style.opacity = is_all_adapters ? '0.5' : '1';
-            document.getElementById('selAdapter').disabled = is_all_adapters;
-            document.getElementById('inpMac').disabled = is_all_adapters;
-        }
-
-        document.getElementById('selAdapter')?.addEventListener('change', e => { 
-            hw_target = e.target.value; 
-            const d = hw_list.find(x => x.Name === hw_target); 
-            if(d) document.getElementById('inpMac').value = d.MacAddress; 
-        });
-
-        function rnd_mac() { 
-            const trg = hw_list.find(x => x.Name === hw_target);
-            const is_mirror = document.getElementById('chkMirror')?.checked;
-            const l_bit = ['2','6','A','E'];
-            let build = "";
-            
-            if(is_mirror && trg && trg.MacAddress && trg.MacAddress.length === 17) {
-                build = trg.MacAddress[0] + l_bit[Math.floor(Math.random()*4)] + trg.MacAddress.substring(2, 9);
-            } else {
-                const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-                build = hx() + l_bit[Math.floor(Math.random()*4)] + '-' + hx()+hx() + '-' + hx()+hx() + '-';
-            }
-            
-            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-            const tail = h()+h() + "-" + h()+h() + "-" + h()+h();
-            
-            document.getElementById('inpMac').value = build + tail;
-        }
-
-        function mlog(msg, col = '#888') {
-            const lb = document.getElementById('macLogs');
-            lb.innerHTML += `<div style="color:${col}">> ${msg}</div>`;
-            lb.scrollTop = lb.scrollHeight;
-        }
-
-        async function run_spoof() { 
-            if(!s) return; 
-            document.getElementById('macLogs').innerHTML = '';
-            
-            const isSimple = document.querySelector('input[name="spoofMode"]:checked')?.value === 'simple';
-            const targets = (is_all_adapters || isSimple) ? hw_list : hw_list.filter(x => x.Name === hw_target);
-            const run_dhcp = isSimple ? false : document.getElementById('chkDhcp').checked;
-            
-            if(targets.length === 0) {
-                mlog("No valid adapters found to spoof.", 'var(--bad)');
-                return;
-            }
-
-            let err_count = 0;
-
-            for(const t of targets) {
-                let currentNewMac = isSimple ? generate_simple_mac(t) : document.getElementById('inpMac').value;
-                mlog(`Spoofing [${t.Name}] to ${currentNewMac}...`, '#aaa');
-                try {
-                    const res = await s.spoofMac(t.InterfaceDescription || '', currentNewMac);
-                    if(res) {
-                        mlog('Restarting adapter...', '#aaa');
-                        await s.restartAdapter(t.Name);
-                        mlog(`Done [${t.Name}]`, 'var(--good)');
-                    } else {
-                        mlog(`Failed [${t.Name}] - Run as admin?`, 'var(--bad)');
-                        err_count++;
-                    }
-                } catch(e) {
-                    mlog(`Failed [${t.Name}] - ${e.message}`, 'var(--bad)');
-                    err_count++;
-                }
-            }
-            if(run_dhcp) {
-                mlog('Updating DHCP...', '#aaa');
-                await s.dhcpRefresh();
-            }
-            if(err_count > 0) {
-                mlog(`Completed with ${err_count} errors.`, 'var(--bad)');
-            } else {
-                mlog('MAC Spoofing Complete.', 'var(--good)');
-            }
-        }
-
-        function generate_simple_mac(adapter) {
-            const l_bit = ['2','6','A','E'];
-            let build = "";
-            if(adapter && adapter.MacAddress && adapter.MacAddress.length === 17) {
-                build = adapter.MacAddress[0] + l_bit[Math.floor(Math.random()*4)] + adapter.MacAddress.substring(2, 9);
-            } else {
-                const hx = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-                build = hx() + l_bit[Math.floor(Math.random()*4)] + '-' + hx()+hx() + '-' + hx()+hx() + '-';
-            }
-            const h = () => "0123456789ABCDEF"[Math.floor(Math.random()*16)];
-            return build + h()+h() + "-" + h()+h() + "-" + h()+h();
-        }
-
-        async function rev_mac() { 
-            if(!s) return; 
-            document.getElementById('macLogs').innerHTML = '';
-            
-            const isSimple = document.querySelector('input[name="spoofMode"]:checked')?.value === 'simple';
-            const run_dhcp = isSimple ? false : document.getElementById('chkDhcp').checked;
-            const targets = (is_all_adapters || isSimple) ? hw_list : hw_list.filter(x => x.Name === hw_target);
-            
-            if(targets.length === 0) {
-                mlog("No valid adapters found to revert.", 'var(--bad)');
-                return;
-            }
-
-            let err_count = 0;
-
-            for(const t of targets) {
-                mlog(`Reverting [${t.Name}]...`, '#aaa');
-                try {
-                    const res = await s.resetMac(t.InterfaceDescription || '');
-                    if(res) {
-                        mlog('Restarting adapter...', '#aaa');
-                        await s.restartAdapter(t.Name);
-                        mlog(`Done [${t.Name}]`, 'var(--good)');
-                    } else {
-                        mlog(`Failed to revert [${t.Name}] - Run as admin?`, 'var(--bad)');
-                        err_count++;
-                    }
-                } catch(e) {
-                    mlog(`Failed [${t.Name}] - ${e.message}`, 'var(--bad)');
-                    err_count++;
-                }
-            }
-            if(run_dhcp) {
-                mlog('Updating DHCP...', '#aaa');
-                await s.dhcpRefresh();
-            }
-            if(err_count > 0) {
-                mlog(`Completed with ${err_count} errors.`, 'var(--bad)');
-            } else {
-                mlog('Reversion Complete.', 'var(--good)');
-            }
-        }
-
-        function trigger_bao_confetti() {
-            for(let i = 0; i < 15; i++) {
-                setTimeout(() => {
-                    const img = document.createElement('img');
-                    img.src = '../assets/bao.png';
-                    img.className = 'bao-confetti';
-                    img.style.left = Math.random() * 100 + 'vw';
-                    const scale = 0.5 + Math.random() * 1;
-                    img.style.width = (32 * scale) + 'px';
-                    img.style.height = (32 * scale) + 'px';
-                    img.style.animationDuration = (1.5 + Math.random()) + 's';
-                    img.style.animationDelay = (Math.random() * 0.5) + 's';
-                    document.body.appendChild(img);
-                    setTimeout(() => { img.remove(); }, 3000);
-                }, i * 50);
-            }
-        }
-
-        let pendingConfirmAction = null;
-        
-        function show_confirm(title, msg, callback) {
-            document.getElementById('confirmTitle').innerText = title;
-            document.getElementById('confirmMsg').innerText = msg;
-            pendingConfirmAction = callback;
-            document.getElementById('confirmModal').style.display = 'flex';
-        }
-        
-        function close_confirm() {
-            document.getElementById('confirmModal').style.display = 'none';
-            pendingConfirmAction = null;
-        }
-        
-        function execute_confirm() {
-            if(pendingConfirmAction) {
-                pendingConfirmAction();
-            }
-            close_confirm();
-        }
-        
-        function revert_all_macs_home_confirmed() {
-            show_confirm('Revert spoofed MACs?', 'This will reset all network adapters to their original MAC addresses.', async () => {
-                if(!s) return;
-                const btn = document.getElementById('home_revert_btn');
-                const ogText = btn.innerText;
-                btn.innerText = "Reverting...";
-                btn.style.pointerEvents = "none";
-                
-                await fetch_hardware();
-                let all_hw = hw_list;
-                let err_count = 0;
-                
-                for(const t of all_hw) {
-                    try {
-                        const res = await s.resetMac(t.InterfaceDescription || '');
-                        if(res) {
-                            await s.restartAdapter(t.Name);
-                        } else {
-                            err_count++;
-                        }
-                    } catch(e) { err_count++; }
-                }
-                
-                btn.innerText = err_count > 0 ? "Reverted (w/ errors)" : "Reverted successfully!";
-                setTimeout(() => { 
-                    btn.innerText = ogText; 
-                    btn.style.pointerEvents = "auto";
-                }, 3000);
-            });
-        }
-        
-        function check_mac_tooltip() {
-            if(is_all_adapters) return;
-            const inp = document.getElementById('inpMac');
-            if(hw_target && hw_list.length > 0) {
-                const original = hw_list.find(x => x.Name === hw_target)?.MacAddress;
-                const current = inp.value;
-                if(original !== current) {
-                    inp.removeAttribute('data-tooltip');
-                }
-            }
-        }
-        
-        function update_mac_tooltip() {
-            if(!is_all_adapters) {
-                document.getElementById('inpMac').removeAttribute('data-tooltip');
-            }
-        }
-
-        init();
-    </script>
+    <script src="renderer.js"></script>
 </body>
+
 </html>
